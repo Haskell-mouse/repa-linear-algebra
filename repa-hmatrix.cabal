@@ -16,9 +16,14 @@ extra-source-files:  README.md
 cabal-version:       >=1.10
 
 library
-  -- exposed-modules:     
+  exposed-modules:     Numeric.LinearAlgebra.Repa
+                       Numeric.LinearAlgebra.Repa.Conversion
   -- other-modules:       
   -- other-extensions:    
   build-depends:       base >=4.8 && <4.9
+                     , hmatrix
+                     , repa
+                     , vector
   hs-source-dirs:      src
+  ghc-options:       -Wall -Werror
   default-language:    Haskell2010
