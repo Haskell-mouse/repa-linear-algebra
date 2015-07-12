@@ -121,6 +121,23 @@ module Numeric.LinearAlgebra.Repa
   , invlndetSIO
   , invlndetP
   , invlndetPIO
+  -- * Norms
+  , norm_Frob
+  , norm_FrobS
+  , norm_FrobSIO
+  , norm_FrobP
+  , norm_FrobPIO
+  , norm_nuclear
+  , norm_nuclearS
+  , norm_nuclearSIO
+  , norm_nuclearP
+  , norm_nuclearPIO
+  -- * Nullspace and range
+  , orth
+  , orthS
+  , orthSIO
+  , orthP
+  , orthPIO
   ) where
 
 import Numeric.LinearAlgebra.Repa.Conversion
@@ -128,7 +145,7 @@ import Numeric.LinearAlgebra.Repa.Conversion
 import Data.Array.Repa hiding (rank)
 import Data.Array.Repa.Repr.ForeignPtr
 import qualified Numeric.LinearAlgebra.HMatrix as H
-import Numeric.LinearAlgebra.HMatrix (Numeric, Field, LSDiv, Product)
+import Numeric.LinearAlgebra.HMatrix (Numeric, Field, LSDiv, Normed, Product, Vector)
 
 -- Dot product
 
@@ -533,3 +550,54 @@ invlndetPIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, (t,
 invlndetPIO m = do 
   (h, r) <- H.invlndet <$> repa2hmPIO m 
   return (hm2repa h, r)
+
+-- Norms
+
+norm_Frob :: (Normed (Vector t), Element t) => Array F DIM2 t -> Double
+norm_Frob = H.norm_Frob . repa2hm
+
+norm_FrobS :: (Normed (Vector t), Element t) => Array D DIM2 t -> Double
+norm_FrobS = H.norm_Frob . repa2hmS
+
+norm_FrobSIO :: (Normed (Vector t), Element t) => Array D DIM2 t -> IO Double
+norm_FrobSIO = fmap H.norm_Frob . repa2hmSIO
+
+norm_FrobP :: (Normed (Vector t), Element t, Monad m) => Array D DIM2 t -> m Double
+norm_FrobP = fmap H.norm_Frob . repa2hmP
+
+norm_FrobPIO :: (Normed (Vector t), Element t) => Array D DIM2 t -> IO Double
+norm_FrobPIO = fmap H.norm_Frob . repa2hmPIO
+
+
+norm_nuclear :: (Field t, Numeric t) => Array F DIM2 t -> Double
+norm_nuclear = H.norm_nuclear . repa2hm
+
+norm_nuclearS :: (Field t, Numeric t) => Array D DIM2 t -> Double
+norm_nuclearS = H.norm_nuclear . repa2hmS
+
+norm_nuclearSIO :: (Field t, Numeric t) => Array D DIM2 t -> IO Double
+norm_nuclearSIO = fmap H.norm_nuclear . repa2hmSIO
+
+norm_nuclearP :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m Double
+norm_nuclearP = fmap H.norm_nuclear . repa2hmP
+
+norm_nuclearPIO :: (Field t, Numeric t) => Array D DIM2 t -> IO Double
+norm_nuclearPIO = fmap H.norm_nuclear . repa2hmPIO
+
+-- Nullspace and range
+
+orth :: (Field t, Numeric t) => Array F DIM2 t -> Array F DIM2 t
+-- ^An orthonormal basis of the range space of a matrix. See also 'orthSVD'.
+orth = hm2repa . H.orth . repa2hm
+
+orthS :: (Field t, Numeric t) => Array D DIM2 t -> Array F DIM2 t
+orthS = hm2repa . H.orth . repa2hmS
+
+orthSIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t)
+orthSIO = fmap (hm2repa . H.orth) . repa2hmSIO
+
+orthP :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM2 t)
+orthP = fmap (hm2repa . H.orth) . repa2hmP
+
+orthPIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t)
+orthPIO = fmap (hm2repa . H.orth) . repa2hmPIO
