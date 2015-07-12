@@ -138,6 +138,47 @@ module Numeric.LinearAlgebra.Repa
   , orthSIO
   , orthP
   , orthPIO
+  , nullspace
+  , nullspaceS
+  , nullspaceSIO
+  , nullspaceP
+  , nullspacePIO
+  , null1
+  , null1S
+  , null1SIO
+  , null1P
+  , null1PIO
+  , null1sym
+  , null1symS
+  , null1symSIO
+  , null1symP
+  , null1symPIO
+  -- * SVD
+  , svd
+  , svdS
+  , svdSIO
+  , svdP
+  , svdPIO
+  , thinSVD
+  , thinSVD_S
+  , thinSVD_SIO
+  , thinSVD_P
+  , thinSVD_PIO
+  , compactSVD
+  , compactSVD_S
+  , compactSVD_SIO
+  , compactSVD_P
+  , compactSVD_PIO
+  , singularValues
+  , singularValuesS
+  , singularValuesSIO
+  , singularValuesP
+  , singularValuesPIO
+  , leftSV
+  , leftSV_S
+  , leftSV_SIO
+  , leftSV_P
+  , leftSV_PIO
   ) where
 
 import Numeric.LinearAlgebra.Repa.Conversion
@@ -601,3 +642,157 @@ orthP = fmap (hm2repa . H.orth) . repa2hmP
 
 orthPIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t)
 orthPIO = fmap (hm2repa . H.orth) . repa2hmPIO
+
+nullspace :: (Field t, Numeric t) => Array F DIM2 t -> Array F DIM2 t
+-- ^An orthonormal basis of the null space of a matrix. See also 'nullspaceSVD'.
+nullspace = hm2repa . H.nullspace . repa2hm
+
+nullspaceS :: (Field t, Numeric t) => Array D DIM2 t -> Array F DIM2 t
+nullspaceS = hm2repa . H.nullspace . repa2hmS
+
+nullspaceSIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t)
+nullspaceSIO = fmap (hm2repa . H.nullspace) . repa2hmSIO
+
+nullspaceP :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM2 t)
+nullspaceP = fmap (hm2repa . H.nullspace) . repa2hmP
+
+nullspacePIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t)
+nullspacePIO = fmap (hm2repa . H.nullspace) . repa2hmPIO
+
+null1 :: Array F DIM2 Double -> Array F DIM1 Double
+-- ^Solution of an overconstrained homogenous linear system.
+null1 = hv2repa . H.null1 . repa2hm
+
+null1S :: Array D DIM2 Double -> Array F DIM1 Double
+null1S = hv2repa . H.null1 . repa2hmS
+
+null1SIO :: Array D DIM2 Double -> IO (Array F DIM1 Double)
+null1SIO = fmap (hv2repa . H.null1) . repa2hmSIO
+
+null1P :: Monad m => Array D DIM2 Double -> m (Array F DIM1 Double)
+null1P = fmap (hv2repa . H.null1) . repa2hmP
+
+null1PIO :: Array D DIM2 Double -> IO (Array F DIM1 Double)
+null1PIO = fmap (hv2repa . H.null1) . repa2hmPIO
+
+null1sym :: Array F DIM2 Double -> Array F DIM1 Double
+-- ^Solution of an overconstrained homogenous symmetric linear system.
+null1sym = hv2repa . H.null1sym . repa2hm
+
+null1symS :: Array D DIM2 Double -> Array F DIM1 Double
+null1symS = hv2repa . H.null1sym . repa2hmS
+
+null1symSIO :: Array D DIM2 Double -> IO (Array F DIM1 Double)
+null1symSIO = fmap (hv2repa . H.null1sym) . repa2hmSIO
+
+null1symP :: Monad m => Array D DIM2 Double -> m (Array F DIM1 Double)
+null1symP = fmap (hv2repa . H.null1sym) . repa2hmP
+
+null1symPIO :: Array D DIM2 Double -> IO (Array F DIM1 Double)
+null1symPIO = fmap (hv2repa . H.null1sym) . repa2hmPIO
+
+-- SVD
+
+svd :: (Field t, Numeric t) => Array F DIM2 t -> (Array F DIM2 t, Array F DIM1 Double, Array F DIM2 t)
+-- ^Full singular value decomposition.
+svd m = let (u,s,v) = H.svd $ repa2hm m in (hm2repa u, hv2repa s, hm2repa v)
+
+svdS :: (Field t, Numeric t) => Array D DIM2 t -> (Array F DIM2 t, Array F DIM1 Double, Array F DIM2 t)
+svdS m = let (u,s,v) = H.svd $ repa2hmS m in (hm2repa u, hv2repa s, hm2repa v)
+
+svdSIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Array F DIM1 Double, Array F DIM2 t)
+svdSIO m = do
+  (u,s,v) <- H.svd <$> repa2hmSIO m 
+  return (hm2repa u, hv2repa s, hm2repa v)
+
+svdP :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM2 t, Array F DIM1 Double, Array F DIM2 t)
+svdP m = do
+  (u,s,v) <- H.svd <$> repa2hmP m 
+  return (hm2repa u, hv2repa s, hm2repa v)
+
+svdPIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Array F DIM1 Double, Array F DIM2 t)
+svdPIO m = do
+  (u,s,v) <- H.svd <$> repa2hmPIO m 
+  return (hm2repa u, hv2repa s, hm2repa v)
+
+thinSVD :: (Field t, Numeric t) => Array F DIM2 t -> (Array F DIM2 t, Array F DIM1 Double, Array F DIM2 t)
+-- ^A version of 'svd' which returns only the min (rows m) (cols m) singular vectors of m. (u,s,v) = thinSVD m ==> m == u * diag s * tr v
+thinSVD m = let (u,s,v) = H.thinSVD $ repa2hm m in (hm2repa u, hv2repa s, hm2repa v)
+
+thinSVD_S :: (Field t, Numeric t) => Array D DIM2 t -> (Array F DIM2 t, Array F DIM1 Double, Array F DIM2 t)
+thinSVD_S m = let (u,s,v) = H.thinSVD $ repa2hmS m in (hm2repa u, hv2repa s, hm2repa v)
+
+thinSVD_SIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Array F DIM1 Double, Array F DIM2 t)
+thinSVD_SIO m = do
+  (u,s,v) <- H.thinSVD <$> repa2hmSIO m 
+  return (hm2repa u, hv2repa s, hm2repa v)
+
+thinSVD_P :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM2 t, Array F DIM1 Double, Array F DIM2 t)
+thinSVD_P m = do
+  (u,s,v) <- H.thinSVD <$> repa2hmP m 
+  return (hm2repa u, hv2repa s, hm2repa v)
+
+thinSVD_PIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Array F DIM1 Double, Array F DIM2 t)
+thinSVD_PIO m = do
+  (u,s,v) <- H.thinSVD <$> repa2hmPIO m 
+  return (hm2repa u, hv2repa s, hm2repa v)
+
+compactSVD :: (Field t, Numeric t) => Array F DIM2 t -> (Array F DIM2 t, Array F DIM1 Double, Array F DIM2 t)
+-- ^Similar to 'thinSVD', returning only the nonzero singular values and the corresponding singular vectors.
+compactSVD m = let (u,s,v) = H.compactSVD $ repa2hm m in (hm2repa u, hv2repa s, hm2repa v)
+
+compactSVD_S :: (Field t, Numeric t) => Array D DIM2 t -> (Array F DIM2 t, Array F DIM1 Double, Array F DIM2 t)
+compactSVD_S m = let (u,s,v) = H.compactSVD $ repa2hmS m in (hm2repa u, hv2repa s, hm2repa v)
+
+compactSVD_SIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Array F DIM1 Double, Array F DIM2 t)
+compactSVD_SIO m = do
+  (u,s,v) <- H.compactSVD <$> repa2hmSIO m 
+  return (hm2repa u, hv2repa s, hm2repa v)
+
+compactSVD_P :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM2 t, Array F DIM1 Double, Array F DIM2 t)
+compactSVD_P m = do
+  (u,s,v) <- H.compactSVD <$> repa2hmP m 
+  return (hm2repa u, hv2repa s, hm2repa v)
+
+compactSVD_PIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Array F DIM1 Double, Array F DIM2 t)
+compactSVD_PIO m = do
+  (u,s,v) <- H.compactSVD <$> repa2hmPIO m 
+  return (hm2repa u, hv2repa s, hm2repa v)
+
+singularValues :: (Field t, Numeric t) => Array F DIM2 t -> Array F DIM1 Double
+-- ^Singular values only.
+singularValues = hv2repa . H.singularValues . repa2hm
+
+singularValuesS :: (Field t, Numeric t) => Array D DIM2 t -> Array F DIM1 Double
+singularValuesS = hv2repa . H.singularValues . repa2hmS
+
+singularValuesSIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM1 Double)
+singularValuesSIO = fmap (hv2repa . H.singularValues) . repa2hmSIO
+
+singularValuesP :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM1 Double)
+singularValuesP = fmap (hv2repa . H.singularValues) . repa2hmP
+
+singularValuesPIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM1 Double)
+singularValuesPIO = fmap (hv2repa . H.singularValues) . repa2hmPIO
+
+leftSV :: (Field t, Numeric t) => Array F DIM2 t -> (Array F DIM2 t, Array F DIM1 Double)
+-- ^Singular values and left singular vectors (as columns).
+leftSV m = let (u,s) = H.leftSV $ repa2hm m in (hm2repa u, hv2repa s)
+
+leftSV_S :: (Field t, Numeric t) => Array D DIM2 t -> (Array F DIM2 t, Array F DIM1 Double)
+leftSV_S m = let (u,s) = H.leftSV $ repa2hmS m in (hm2repa u, hv2repa s)
+
+leftSV_SIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Array F DIM1 Double)
+leftSV_SIO m = do
+  (u,s) <- H.leftSV <$> repa2hmSIO m 
+  return (hm2repa u, hv2repa s)
+
+leftSV_P :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM2 t, Array F DIM1 Double)
+leftSV_P m = do
+  (u,s) <- H.leftSV <$> repa2hmP m 
+  return (hm2repa u, hv2repa s)
+
+leftSV_PIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Array F DIM1 Double)
+leftSV_PIO m = do
+  (u,s) <- H.leftSV <$> repa2hmPIO m 
+  return (hm2repa u, hv2repa s)
