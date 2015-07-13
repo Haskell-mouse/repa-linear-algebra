@@ -226,6 +226,40 @@ module Numeric.LinearAlgebra.Repa
   , qrSIO
   , qrP
   , qrPIO
+  , rq
+  , rqS
+  , rqSIO
+  , rqP
+  , rqPIO
+  , qrRaw
+  , qrRawS
+  , qrRawSIO
+  , qrRawP
+  , qrRawPIO
+  , qrgr
+  -- * Cholesky
+  , chol
+  , cholS
+  , cholSIO
+  , cholP
+  , cholPIO
+  , chol'
+  , chol'S
+  , chol'SIO
+  , chol'P
+  , chol'PIO
+  -- * Hessenberg
+  , hess
+  , hessS
+  , hessSIO
+  , hessP
+  , hessPIO
+  -- * Schur
+  , schur
+  , schurS
+  , schurSIO
+  , schurP
+  , schurPIO
   ) where
 
 import Numeric.LinearAlgebra.Repa.Conversion
@@ -1007,7 +1041,7 @@ geigSH'PIO a b = do
 -- QR
 
 qr :: (Field t, Numeric t) => Array F DIM2 t -> (Array F DIM2 t, Array F DIM2 t)
--- ^QR factorization. (q,r) = qr ==> m = q * r where q is unitary and r is upper triangular.
+-- ^QR factorization. (q,r) = qr m ==> m = q * r where q is unitary and r is upper triangular.
 qr m = let (q,r) = H.qr $ repa2hm m in (hm2repa q, hm2repa r)
 
 qrS :: (Field t, Numeric t) => Array D DIM2 t -> (Array F DIM2 t, Array F DIM2 t)
@@ -1027,3 +1061,131 @@ qrPIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Array F D
 qrPIO m = do
   (q,r) <- H.qr <$> repa2hmPIO m 
   return (hm2repa q, hm2repa r)
+
+rq :: (Field t, Numeric t) => Array F DIM2 t -> (Array F DIM2 t, Array F DIM2 t)
+-- ^RQ factorization. (r,q) = rq m ==> m = r * q where q is unitary and r is upper triangular.
+rq m = let (r,q) = H.rq $ repa2hm m in (hm2repa r, hm2repa q)
+
+rqS :: (Field t, Numeric t) => Array D DIM2 t -> (Array F DIM2 t, Array F DIM2 t)
+rqS m = let (r,q) = H.rq $ repa2hmS m in (hm2repa r, hm2repa q)
+
+rqSIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Array F DIM2 t)
+rqSIO m = do 
+  (r,q) <- H.rq <$> repa2hmSIO m 
+  return (hm2repa r, hm2repa q)
+
+rqP :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM2 t, Array F DIM2 t)
+rqP m = do 
+  (r,q) <- H.rq <$> repa2hmP m 
+  return (hm2repa r, hm2repa q)
+
+rqPIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Array F DIM2 t)
+rqPIO m = do 
+  (r,q) <- H.rq <$> repa2hmPIO m 
+  return (hm2repa r, hm2repa q)
+
+qrRaw :: (Field t, Numeric t) => Array F DIM2 t -> (Array F DIM2 t, Array F DIM1 t)
+qrRaw m = let (n,v) = H.qrRaw $ repa2hm m in (hm2repa n, hv2repa v)
+
+qrRawS :: (Field t, Numeric t) => Array D DIM2 t -> (Array F DIM2 t, Array F DIM1 t)
+qrRawS m = let (n,v) = H.qrRaw $ repa2hmS m in (hm2repa n, hv2repa v)
+
+qrRawSIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Array F DIM1 t)
+qrRawSIO m = do
+  (n,v) <- H.qrRaw <$> repa2hmSIO m 
+  return (hm2repa n, hv2repa v)
+
+qrRawP :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM2 t, Array F DIM1 t)
+qrRawP m = do
+  (n,v) <- H.qrRaw <$> repa2hmP m 
+  return (hm2repa n, hv2repa v)
+
+qrRawPIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Array F DIM1 t)
+qrRawPIO m = do
+  (n,v) <- H.qrRaw <$> repa2hmPIO m 
+  return (hm2repa n, hv2repa v)
+
+qrgr :: (Field t, Numeric t) => Int -> (Array F DIM2 t, Array F DIM1 t) -> Array F DIM2 t
+-- ^Generate a matrix with k othogonal columns from the output of 'qrRaw'.
+qrgr k (m,v) = hm2repa $ H.qrgr k (repa2hm m, repa2hv v)
+
+-- Cholesky
+
+chol :: (Field t, Numeric t) => Array F DIM2 t -> Array F DIM2 t
+-- ^Cholesky factorization of a positive definite hermitian or symmetric matrix. c = chol m ==> m == c' * c where c is upper triangular.
+chol = hm2repa . H.chol . repa2hm
+
+cholS :: (Field t, Numeric t) => Array D DIM2 t -> Array F DIM2 t
+cholS = hm2repa . H.chol . repa2hmS
+
+cholSIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t)
+cholSIO = fmap (hm2repa . H.chol) . repa2hmSIO
+
+cholP :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM2 t)
+cholP = fmap (hm2repa . H.chol) . repa2hmP
+
+cholPIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t)
+cholPIO = fmap (hm2repa . H.chol) . repa2hmPIO
+
+chol' :: (Field t, Numeric t) => Array F DIM2 t -> Array F DIM2 t
+-- ^Similar to 'chol' without checking that the input matrix is hermitian or symmetric. It works with the upper triangular part.
+chol' = hm2repa . H.cholSH . repa2hm
+
+chol'S :: (Field t, Numeric t) => Array D DIM2 t -> Array F DIM2 t
+chol'S = hm2repa . H.cholSH . repa2hmS
+
+chol'SIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t)
+chol'SIO = fmap (hm2repa . H.cholSH) . repa2hmSIO
+
+chol'P :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM2 t)
+chol'P = fmap (hm2repa . H.cholSH) . repa2hmP
+
+chol'PIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t)
+chol'PIO = fmap (hm2repa . H.cholSH) . repa2hmPIO
+
+-- Hessenberg
+
+hess :: (Field t, Numeric t) => Array F DIM2 t -> (Array F DIM2 t, Array F DIM2 t)
+-- ^Hessenberg factorization. (p,h) == hess m ==> p * h * p' where p is unitary and h is in upper Hessenberg form (zero entries below the first subdiagonal).
+hess m = let (p,h) = H.hess $ repa2hm m in (hm2repa p, hm2repa h)
+
+hessS :: (Field t, Numeric t) => Array D DIM2 t -> (Array F DIM2 t, Array F DIM2 t)
+hessS m = let (p,h) = H.hess $ repa2hmS m in (hm2repa p, hm2repa h)
+
+hessSIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Array F DIM2 t)
+hessSIO m = do 
+  (p,h) <- H.hess <$> repa2hmSIO m 
+  return (hm2repa p, hm2repa h)
+
+hessP :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM2 t, Array F DIM2 t)
+hessP m = do 
+  (p,h) <- H.hess <$> repa2hmP m 
+  return (hm2repa p, hm2repa h)
+
+hessPIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Array F DIM2 t)
+hessPIO m = do 
+  (p,h) <- H.hess <$> repa2hmPIO m 
+  return (hm2repa p, hm2repa h)
+
+-- Schur
+schur :: (Field t, Numeric t) => Array F DIM2 t -> (Array F DIM2 t, Array F DIM2 t)
+-- ^Schur factorization. (u,s) = schur m ==> m == u * s * u' where u is unitary and s is a Schur matrix. A complex Schur matrix is upper triangular. A real Schur matrix is upper triangular in 2x2 blocks.
+schur m = let (u,s) = H.schur $ repa2hm m in (hm2repa u, hm2repa s)
+
+schurS :: (Field t, Numeric t) => Array D DIM2 t -> (Array F DIM2 t, Array F DIM2 t)
+schurS m = let (u,s) = H.schur $ repa2hmS m in (hm2repa u, hm2repa s)
+
+schurSIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Array F DIM2 t)
+schurSIO m = do 
+  (u,s) <- H.schur <$> repa2hmSIO m 
+  return (hm2repa u, hm2repa s)
+
+schurP :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM2 t, Array F DIM2 t)
+schurP m = do 
+  (u,s) <- H.schur <$> repa2hmP m 
+  return (hm2repa u, hm2repa s)
+
+schurPIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Array F DIM2 t)
+schurPIO m = do 
+  (u,s) <- H.schur <$> repa2hmPIO m 
+  return (hm2repa u, hm2repa s)
