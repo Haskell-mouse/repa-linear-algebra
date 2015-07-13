@@ -179,6 +179,53 @@ module Numeric.LinearAlgebra.Repa
   , leftSV_SIO
   , leftSV_P
   , leftSV_PIO
+  , rightSV
+  , rightSV_S
+  , rightSV_SIO
+  , rightSV_P
+  , rightSV_PIO
+  -- * Eigensystems
+  , eig
+  , eigS
+  , eigSIO
+  , eigP
+  , eigPIO
+  , eigSH
+  , eigSH_S
+  , eigSH_SIO
+  , eigSH_P
+  , eigSH_PIO
+  , eigSH'
+  , eigSH'S
+  , eigSH'SIO
+  , eigSH'P
+  , eigSH'PIO
+  , eigenvalues
+  , eigenvaluesS
+  , eigenvaluesSIO
+  , eigenvaluesP
+  , eigenvaluesPIO
+  , eigenvaluesSH
+  , eigenvaluesSH_S
+  , eigenvaluesSH_SIO
+  , eigenvaluesSH_P
+  , eigenvaluesSH_PIO
+  , eigenvaluesSH'
+  , eigenvaluesSH'S
+  , eigenvaluesSH'SIO
+  , eigenvaluesSH'P
+  , eigenvaluesSH'PIO
+  , geigSH'
+  , geigSH'S
+  , geigSH'SIO
+  , geigSH'P
+  , geigSH'PIO
+  -- * QR
+  , qr
+  , qrS
+  , qrSIO
+  , qrP
+  , qrPIO
   ) where
 
 import Numeric.LinearAlgebra.Repa.Conversion
@@ -186,7 +233,7 @@ import Numeric.LinearAlgebra.Repa.Conversion
 import Data.Array.Repa hiding (rank)
 import Data.Array.Repa.Repr.ForeignPtr
 import qualified Numeric.LinearAlgebra.HMatrix as H
-import Numeric.LinearAlgebra.HMatrix (Numeric, Field, LSDiv, Normed, Product, Vector)
+import Numeric.LinearAlgebra.HMatrix (Complex, Numeric, Field, LSDiv, Normed, Product, Vector)
 
 -- Dot product
 
@@ -776,7 +823,7 @@ singularValuesPIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM1 
 singularValuesPIO = fmap (hv2repa . H.singularValues) . repa2hmPIO
 
 leftSV :: (Field t, Numeric t) => Array F DIM2 t -> (Array F DIM2 t, Array F DIM1 Double)
--- ^Singular values and left singular vectors (as columns).
+-- ^Singular values and all left singular vectors (as columns).
 leftSV m = let (u,s) = H.leftSV $ repa2hm m in (hm2repa u, hv2repa s)
 
 leftSV_S :: (Field t, Numeric t) => Array D DIM2 t -> (Array F DIM2 t, Array F DIM1 Double)
@@ -796,3 +843,187 @@ leftSV_PIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Arra
 leftSV_PIO m = do
   (u,s) <- H.leftSV <$> repa2hmPIO m 
   return (hm2repa u, hv2repa s)
+
+rightSV :: (Field t, Numeric t) => Array F DIM2 t -> (Array F DIM1 Double, Array F DIM2 t)
+-- ^Singular values and all right singular vectors (as columns).
+rightSV m = let (s,v) = H.rightSV $ repa2hm m in (hv2repa s, hm2repa v)
+
+rightSV_S :: (Field t, Numeric t) => Array D DIM2 t -> (Array F DIM1 Double, Array F DIM2 t)
+rightSV_S m = let (s,v) = H.rightSV $ repa2hmS m in (hv2repa s, hm2repa v)
+
+rightSV_SIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM1 Double, Array F DIM2 t)
+rightSV_SIO m = do
+  (s,v) <- H.rightSV <$> repa2hmSIO m 
+  return (hv2repa s, hm2repa v)
+
+rightSV_P :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM1 Double, Array F DIM2 t)
+rightSV_P m = do
+  (s,v) <- H.rightSV <$> repa2hmP m 
+  return (hv2repa s, hm2repa v)
+
+rightSV_PIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM1 Double, Array F DIM2 t)
+rightSV_PIO m = do
+  (s,v) <- H.rightSV <$> repa2hmPIO m 
+  return (hv2repa s, hm2repa v)
+
+-- Eigensystems
+
+eig :: (Field t, Numeric t) => Array F DIM2 t -> (Array F DIM1 (Complex Double), Array F DIM2 (Complex Double))
+-- ^Eigenvalues (not ordered) and eigenvectors (as columns) of a general square matrix. (s,v) = eig m ==> m * v = v == v <> diag s
+eig m = let (s,v) = H.eig $ repa2hm m in (hv2repa s, hm2repa v)
+
+eigS :: (Field t, Numeric t) => Array D DIM2 t -> (Array F DIM1 (Complex Double), Array F DIM2 (Complex Double))
+eigS m = let (s,v) = H.eig $ repa2hmS m in (hv2repa s, hm2repa v)
+
+eigSIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM1 (Complex Double), Array F DIM2 (Complex Double))
+eigSIO m = do
+  (s,v) <- H.eig <$> repa2hmSIO m 
+  return (hv2repa s, hm2repa v)
+
+eigP :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM1 (Complex Double), Array F DIM2 (Complex Double))
+eigP m = do
+  (s,v) <- H.eig <$> repa2hmP m 
+  return (hv2repa s, hm2repa v)
+
+eigPIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM1 (Complex Double), Array F DIM2 (Complex Double))
+eigPIO m = do
+  (s,v) <- H.eig <$> repa2hmPIO m 
+  return (hv2repa s, hm2repa v)
+
+eigSH :: (Field t, Numeric t) => Array F DIM2 t -> (Array F DIM1 Double, Array F DIM2 t)
+-- ^Eigenvalues and eigenvectors (as columns) of a complex hermitian or a real symmetric matrix, in descending order.
+eigSH m = let (s,v) = H.eigSH $ repa2hm m in (hv2repa s, hm2repa v)
+
+eigSH_S :: (Field t, Numeric t) => Array D DIM2 t -> (Array F DIM1 Double, Array F DIM2 t)
+eigSH_S m = let (s,v) = H.eigSH $ repa2hmS m in (hv2repa s, hm2repa v)
+
+eigSH_SIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM1 Double, Array F DIM2 t)
+eigSH_SIO m = do
+  (s,v) <- H.eigSH <$> repa2hmSIO m 
+  return (hv2repa s, hm2repa v)
+
+eigSH_P :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM1 Double, Array F DIM2 t)
+eigSH_P m = do
+  (s,v) <- H.eigSH <$> repa2hmP m 
+  return (hv2repa s, hm2repa v)
+
+eigSH_PIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM1 Double, Array F DIM2 t)
+eigSH_PIO m = do
+  (s,v) <- H.eigSH <$> repa2hmPIO m 
+  return (hv2repa s, hm2repa v)
+
+eigSH' :: (Field t, Numeric t) => Array F DIM2 t -> (Array F DIM1 Double, Array F DIM2 t)
+-- ^Similar to 'eigSH' without checking that the input matrix is hermitian or symmetric. It works with the upper triangular part.
+eigSH' m = let (s,v) = H.eigSH' $ repa2hm m in (hv2repa s, hm2repa v)
+
+eigSH'S :: (Field t, Numeric t) => Array D DIM2 t -> (Array F DIM1 Double, Array F DIM2 t)
+eigSH'S m = let (s,v) = H.eigSH' $ repa2hmS m in (hv2repa s, hm2repa v)
+
+eigSH'SIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM1 Double, Array F DIM2 t)
+eigSH'SIO m = do
+  (s,v) <- H.eigSH' <$> repa2hmSIO m 
+  return (hv2repa s, hm2repa v)
+
+eigSH'P :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM1 Double, Array F DIM2 t)
+eigSH'P m = do
+  (s,v) <- H.eigSH' <$> repa2hmP m 
+  return (hv2repa s, hm2repa v)
+
+eigSH'PIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM1 Double, Array F DIM2 t)
+eigSH'PIO m = do
+  (s,v) <- H.eigSH' <$> repa2hmPIO m 
+  return (hv2repa s, hm2repa v)
+
+eigenvalues :: (Field t, Numeric t) => Array F DIM2 t -> Array F DIM1 (Complex Double)
+-- ^Eigenvalues (not ordered) of a general square matrix.
+eigenvalues = hv2repa . H.eigenvalues . repa2hm
+
+eigenvaluesS :: (Field t, Numeric t) => Array D DIM2 t -> Array F DIM1 (Complex Double)
+eigenvaluesS = hv2repa . H.eigenvalues . repa2hmS
+
+eigenvaluesSIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM1 (Complex Double))
+eigenvaluesSIO = fmap (hv2repa . H.eigenvalues) . repa2hmSIO
+
+eigenvaluesP :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM1 (Complex Double))
+eigenvaluesP = fmap (hv2repa . H.eigenvalues) . repa2hmP
+
+eigenvaluesPIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM1 (Complex Double))
+eigenvaluesPIO = fmap (hv2repa . H.eigenvalues) . repa2hmPIO
+
+eigenvaluesSH :: (Field t, Numeric t) => Array F DIM2 t -> Array F DIM1 Double
+-- ^Eigenvalues (in descending order) of a complex hermitian or real symmetric matrix.
+eigenvaluesSH = hv2repa . H.eigenvaluesSH . repa2hm
+
+eigenvaluesSH_S :: (Field t, Numeric t) => Array D DIM2 t -> Array F DIM1 Double
+eigenvaluesSH_S = hv2repa . H.eigenvaluesSH . repa2hmS
+
+eigenvaluesSH_SIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM1 Double)
+eigenvaluesSH_SIO = fmap (hv2repa . H.eigenvaluesSH) . repa2hmSIO
+
+eigenvaluesSH_P :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM1 Double)
+eigenvaluesSH_P = fmap (hv2repa . H.eigenvaluesSH) . repa2hmP
+
+eigenvaluesSH_PIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM1 Double)
+eigenvaluesSH_PIO = fmap (hv2repa . H.eigenvaluesSH) . repa2hmPIO
+
+eigenvaluesSH' :: (Field t, Numeric t) => Array F DIM2 t -> Array F DIM1 Double
+-- ^Similar to 'eigenvaluesSH' without checking that the input matrix is hermitian or symmetric. It works with the upper triangular part.
+eigenvaluesSH' = hv2repa . H.eigenvaluesSH' . repa2hm
+
+eigenvaluesSH'S :: (Field t, Numeric t) => Array D DIM2 t -> Array F DIM1 Double
+eigenvaluesSH'S = hv2repa . H.eigenvaluesSH' . repa2hmS
+
+eigenvaluesSH'SIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM1 Double)
+eigenvaluesSH'SIO = fmap (hv2repa . H.eigenvaluesSH') . repa2hmSIO
+
+eigenvaluesSH'P :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM1 Double)
+eigenvaluesSH'P = fmap (hv2repa . H.eigenvaluesSH') . repa2hmP
+
+eigenvaluesSH'PIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM1 Double)
+eigenvaluesSH'PIO = fmap (hv2repa . H.eigenvaluesSH') . repa2hmPIO
+
+geigSH' :: (Field t, Numeric t) => Array F DIM2 t -> Array F DIM2 t -> (Array F DIM1 Double, Array F DIM2 t)
+-- ^Generalized symmetric positive definite eigensystem Av = IBv, for A and B symmetric, B positive definite (conditions not checked).
+geigSH' a b = let (s,v) = H.geigSH' (repa2hm a) (repa2hm b) in (hv2repa s, hm2repa v)
+
+geigSH'S :: (Field t, Numeric t) => Array D DIM2 t -> Array D DIM2 t -> (Array F DIM1 Double, Array F DIM2 t)
+geigSH'S a b = let (s,v) = H.geigSH' (repa2hmS a) (repa2hmS b) in (hv2repa s, hm2repa v)
+
+geigSH'SIO :: (Field t, Numeric t) => Array D DIM2 t -> Array D DIM2 t -> IO (Array F DIM1 Double, Array F DIM2 t)
+geigSH'SIO a b = do
+  (s,v) <- H.geigSH' <$> repa2hmSIO a <*> repa2hmSIO b
+  return (hv2repa s, hm2repa v)
+
+geigSH'P :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> Array D DIM2 t -> m (Array F DIM1 Double, Array F DIM2 t)
+geigSH'P a b = do
+  (s,v) <- H.geigSH' <$> repa2hmP a <*> repa2hmP b
+  return (hv2repa s, hm2repa v)
+
+geigSH'PIO :: (Field t, Numeric t) => Array D DIM2 t -> Array D DIM2 t -> IO (Array F DIM1 Double, Array F DIM2 t)
+geigSH'PIO a b = do
+  (s,v) <- H.geigSH' <$> repa2hmPIO a <*> repa2hmPIO b
+  return (hv2repa s, hm2repa v)
+
+-- QR
+
+qr :: (Field t, Numeric t) => Array F DIM2 t -> (Array F DIM2 t, Array F DIM2 t)
+-- ^QR factorization. (q,r) = qr ==> m = q * r where q is unitary and r is upper triangular.
+qr m = let (q,r) = H.qr $ repa2hm m in (hm2repa q, hm2repa r)
+
+qrS :: (Field t, Numeric t) => Array D DIM2 t -> (Array F DIM2 t, Array F DIM2 t)
+qrS m = let (q,r) = H.qr $ repa2hmS m in (hm2repa q, hm2repa r)
+
+qrSIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Array F DIM2 t)
+qrSIO m = do
+  (q,r) <- H.qr <$> repa2hmSIO m 
+  return (hm2repa q, hm2repa r)
+
+qrP :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM2 t, Array F DIM2 t)
+qrP m = do
+  (q,r) <- H.qr <$> repa2hmP m 
+  return (hm2repa q, hm2repa r)
+
+qrPIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Array F DIM2 t)
+qrPIO m = do
+  (q,r) <- H.qr <$> repa2hmPIO m 
+  return (hm2repa q, hm2repa r)
