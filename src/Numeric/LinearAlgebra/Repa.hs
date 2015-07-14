@@ -260,6 +260,39 @@ module Numeric.LinearAlgebra.Repa
   , schurSIO
   , schurP
   , schurPIO
+  -- * LU
+  , lu
+  , luS
+  , luSIO
+  , luP
+  , luPIO
+  , luPacked
+  , luPackedS
+  , luPackedSIO
+  , luPackedP
+  , luPackedPIO
+  -- * Matrix functions
+  , expm
+  , expmS
+  , expmSIO
+  , expmP
+  , expmPIO
+  , sqrtm
+  , sqrtmS
+  , sqrtmSIO
+  , sqrtmP
+  , sqrtmPIO
+  , matFunc
+  , matFuncS
+  , matFuncSIO
+  , matFuncP
+  , matFuncPIO
+  -- *Correlation and convolution
+  , corr
+  , corrS
+  , corrSIO
+  , corrP
+  , corrPIO
   ) where
 
 import Numeric.LinearAlgebra.Repa.Conversion
@@ -518,21 +551,21 @@ linearSolveSVD_PIO :: (Field t, Numeric t) => Array D DIM2 t -> Array D DIM2 t -
 linearSolveSVD_PIO m n = hm2repa <$> (H.linearSolveLS <$> repa2hmPIO m <*> repa2hmPIO n)
 
 
-luSolve :: (Field t, Numeric t) => (Array F DIM2 t, [Int]) -> Array F DIM2 t -> Array F DIM2 t
+luSolve :: (Field t, Numeric t) => PackedLU t -> Array F DIM2 t -> Array F DIM2 t
 -- ^Solution of a linear system (for several right hand sides) from the precomputed LU factorization obtained by 'luPacked'.
-luSolve (lu, l) m = hm2repa $ H.luSolve (repa2hm lu, l) (repa2hm m)
+luSolve (PackedLU lu' l) m = hm2repa $ H.luSolve (lu', l) (repa2hm m)
 
-luSolveS :: (Field t, Numeric t) => (Array F DIM2 t, [Int]) -> Array D DIM2 t -> Array F DIM2 t
-luSolveS (lu, l) m = hm2repa $ H.luSolve (repa2hm lu, l) (repa2hmS m)
+luSolveS :: (Field t, Numeric t) => PackedLU t -> Array D DIM2 t -> Array F DIM2 t
+luSolveS (PackedLU lu' l) m = hm2repa $ H.luSolve (lu', l) (repa2hmS m)
 
-luSolveSIO :: (Field t, Numeric t) => (Array F DIM2 t, [Int]) -> Array D DIM2 t -> IO (Array F DIM2 t)
-luSolveSIO (lu, l) m = hm2repa . H.luSolve (repa2hm lu, l) <$> repa2hmSIO m
+luSolveSIO :: (Field t, Numeric t) => PackedLU t -> Array D DIM2 t -> IO (Array F DIM2 t)
+luSolveSIO (PackedLU lu' l) m = hm2repa . H.luSolve (lu', l) <$> repa2hmSIO m
 
-luSolveP :: (Field t, Numeric t, Monad m) => (Array F DIM2 t, [Int]) -> Array D DIM2 t -> m (Array F DIM2 t)
-luSolveP (lu, l) m = hm2repa . H.luSolve (repa2hm lu, l) <$> repa2hmP m
+luSolveP :: (Field t, Numeric t, Monad m) => PackedLU t -> Array D DIM2 t -> m (Array F DIM2 t)
+luSolveP (PackedLU lu' l) m = hm2repa . H.luSolve (lu', l) <$> repa2hmP m
 
-luSolvePIO :: (Field t, Numeric t) => (Array F DIM2 t, [Int]) -> Array D DIM2 t -> IO (Array F DIM2 t)
-luSolvePIO (lu, l) m = hm2repa . H.luSolve (repa2hm lu, l) <$> repa2hmPIO m
+luSolvePIO :: (Field t, Numeric t) => PackedLU t -> Array D DIM2 t -> IO (Array F DIM2 t)
+luSolvePIO (PackedLU lu' l) m = hm2repa . H.luSolve (lu', l) <$> repa2hmPIO m
 
 
 cholSolve :: (Field t, Numeric t) => Array F DIM2 t -> Array F DIM2 t -> Array F DIM2 t
@@ -1189,3 +1222,119 @@ schurPIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Array 
 schurPIO m = do 
   (u,s) <- H.schur <$> repa2hmPIO m 
   return (hm2repa u, hm2repa s)
+
+-- LU
+
+lu :: (Field t, Numeric t) => Array F DIM2 t -> (Array F DIM2 t, Array F DIM2 t, Array F DIM2 t, t)
+-- ^Explicit LU factorization of a general matrix. (l,u,p,s) = lu m ==> m = p * l * u where l is lower triangular, u is upper triangular, p is a permutation matrix, and s is the signature of the permutation.
+lu m = let (l,u,p,s) = H.lu $ repa2hm m in (hm2repa l, hm2repa u, hm2repa p, s)
+
+luS :: (Field t, Numeric t) => Array D DIM2 t -> (Array F DIM2 t, Array F DIM2 t, Array F DIM2 t, t)
+luS m = let (l,u,p,s) = H.lu $ repa2hmS m in (hm2repa l, hm2repa u, hm2repa p, s)
+
+luSIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Array F DIM2 t, Array F DIM2 t, t)
+luSIO m = do
+  (l,u,p,s) <- H.lu <$> repa2hmSIO m 
+  return (hm2repa l, hm2repa u, hm2repa p, s)
+
+luP :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM2 t, Array F DIM2 t, Array F DIM2 t, t)
+luP m = do
+  (l,u,p,s) <- H.lu <$> repa2hmP m 
+  return (hm2repa l, hm2repa u, hm2repa p, s)
+
+luPIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Array F DIM2 t, Array F DIM2 t, t)
+luPIO m = do
+  (l,u,p,s) <- H.lu <$> repa2hmPIO m 
+  return (hm2repa l, hm2repa u, hm2repa p, s)
+
+data PackedLU t = PackedLU (H.Matrix t) [Int]
+
+luPacked :: (Field t, Numeric t) => Array F DIM2 t -> PackedLU t
+-- ^Obtains the LU decomposition in a packed data structure suitable for 'luSolve'.
+luPacked m = let (lu', is) = H.luPacked $ repa2hm m in PackedLU lu' is
+
+luPackedS :: (Field t, Numeric t) => Array D DIM2 t -> PackedLU t
+luPackedS m = let (lu', is) = H.luPacked $ repa2hmS m in PackedLU lu' is
+
+luPackedSIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (PackedLU t)
+luPackedSIO m = do
+  (lu', is) <- H.luPacked <$> repa2hmSIO m 
+  return $ PackedLU lu' is
+
+luPackedP :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (PackedLU t)
+luPackedP m = do
+  (lu', is) <- H.luPacked <$> repa2hmP m 
+  return $ PackedLU lu' is
+
+luPackedPIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (PackedLU t)
+luPackedPIO m = do
+  (lu', is) <- H.luPacked <$> repa2hmPIO m 
+  return $ PackedLU lu' is
+
+-- Matrix functions
+
+expm :: (Field t, Numeric t) => Array F DIM2 t -> Array F DIM2 t
+-- ^Matrix exponential. It uses a direct translation of Algorithm 11.3.1 in Golub & Val Loan, based on a scaled Pade approximation.
+expm = hm2repa . H.expm . repa2hm
+
+expmS :: (Field t, Numeric t) => Array D DIM2 t -> Array F DIM2 t
+expmS = hm2repa . H.expm . repa2hmS
+
+expmSIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t)
+expmSIO = fmap (hm2repa . H.expm) . repa2hmSIO
+
+expmP :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM2 t)
+expmP = fmap (hm2repa . H.expm) . repa2hmP
+
+expmPIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t)
+expmPIO = fmap (hm2repa . H.expm) . repa2hmPIO
+
+sqrtm :: (Field t, Numeric t) => Array F DIM2 t -> Array F DIM2 t
+-- ^Matrix square root. Currently it uses a simple iterative algorithm described in Wikipedia. It only works with invertible matrices that have a real solution.
+sqrtm = hm2repa . H.sqrtm . repa2hm
+
+sqrtmS :: (Field t, Numeric t) => Array D DIM2 t -> Array F DIM2 t
+sqrtmS = hm2repa . H.sqrtm . repa2hmS
+
+sqrtmSIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t)
+sqrtmSIO = fmap (hm2repa . H.sqrtm) . repa2hmSIO
+
+sqrtmP :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM2 t)
+sqrtmP = fmap (hm2repa . H.sqrtm) . repa2hmP
+
+sqrtmPIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t)
+sqrtmPIO = fmap (hm2repa . H.sqrtm) . repa2hmPIO
+
+matFunc :: (Complex Double -> Complex Double) -> Array F DIM2 (Complex Double) -> Array F DIM2 (Complex Double)
+-- Generic matrix function for diagonalizable matrices.
+matFunc f = hm2repa . H.matFunc f . repa2hm
+
+matFuncS :: (Complex Double -> Complex Double) -> Array D DIM2 (Complex Double) -> Array F DIM2 (Complex Double)
+matFuncS f = hm2repa . H.matFunc f . repa2hmS
+
+matFuncSIO :: (Complex Double -> Complex Double) -> Array D DIM2 (Complex Double) -> IO (Array F DIM2 (Complex Double))
+matFuncSIO f = fmap (hm2repa . H.matFunc f) . repa2hmSIO
+
+matFuncP :: Monad m => (Complex Double -> Complex Double) -> Array D DIM2 (Complex Double) -> m (Array F DIM2 (Complex Double))
+matFuncP f = fmap (hm2repa . H.matFunc f) . repa2hmP
+
+matFuncPIO :: (Complex Double -> Complex Double) -> Array D DIM2 (Complex Double) -> IO (Array F DIM2 (Complex Double))
+matFuncPIO f = fmap (hm2repa . H.matFunc f) . repa2hmPIO
+
+-- Correlation and convolution
+
+corr :: (Product t, Numeric t) => Array F DIM1 t -> Array F DIM1 t -> Array F DIM1 t
+-- ^Correlation.
+corr k = hv2repa . H.corr (repa2hv k) . repa2hv
+
+corrS :: (Product t, Numeric t) => Array F DIM1 t -> Array D DIM1 t -> Array F DIM1 t
+corrS k = hv2repa . H.corr (repa2hv k) . repa2hvS
+
+corrSIO :: (Product t, Numeric t) => Array F DIM1 t -> Array D DIM1 t -> IO (Array F DIM1 t)
+corrSIO k = fmap (hv2repa . H.corr (repa2hv k)) . repa2hvSIO
+
+corrP :: (Product t, Numeric t, Monad m) => Array F DIM1 t -> Array D DIM1 t -> m (Array F DIM1 t)
+corrP k = fmap (hv2repa . H.corr (repa2hv k)) . repa2hvP
+
+corrPIO :: (Product t, Numeric t) => Array F DIM1 t -> Array D DIM1 t -> IO (Array F DIM1 t)
+corrPIO k = fmap (hv2repa . H.corr (repa2hv k)) . repa2hvPIO
