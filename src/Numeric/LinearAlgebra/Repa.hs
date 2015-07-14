@@ -293,6 +293,26 @@ module Numeric.LinearAlgebra.Repa
   , corrSIO
   , corrP
   , corrPIO
+  , conv
+  , convS
+  , convSIO
+  , convP
+  , convPIO
+  , corrMin
+  , corrMinS
+  , corrMinSIO
+  , corrMinP
+  , corrMinPIO
+  , corr2
+  , corr2S
+  , corr2SIO
+  , corr2P
+  , corr2PIO
+  , conv2
+  , conv2S
+  , conv2SIO
+  , conv2P
+  , conv2PIO
   ) where
 
 import Numeric.LinearAlgebra.Repa.Conversion
@@ -300,7 +320,7 @@ import Numeric.LinearAlgebra.Repa.Conversion
 import Data.Array.Repa hiding (rank)
 import Data.Array.Repa.Repr.ForeignPtr
 import qualified Numeric.LinearAlgebra.HMatrix as H
-import Numeric.LinearAlgebra.HMatrix (Complex, Numeric, Field, LSDiv, Normed, Product, Vector)
+import Numeric.LinearAlgebra.HMatrix (Complex, Numeric, Field, LSDiv, Normed, Product, Vector, RealElement)
 
 -- Dot product
 
@@ -1338,3 +1358,67 @@ corrP k = fmap (hv2repa . H.corr (repa2hv k)) . repa2hvP
 
 corrPIO :: (Product t, Numeric t) => Array F DIM1 t -> Array D DIM1 t -> IO (Array F DIM1 t)
 corrPIO k = fmap (hv2repa . H.corr (repa2hv k)) . repa2hvPIO
+
+conv :: (Product t, Numeric t) => Array F DIM1 t -> Array F DIM1 t -> Array F DIM1 t
+-- ^Convolution - 'corr' with reversed kernel and padded input, equivalent to polynomial multiplication.
+conv k = hv2repa . H.conv (repa2hv k) . repa2hv
+
+convS :: (Product t, Numeric t) => Array F DIM1 t -> Array D DIM1 t -> Array F DIM1 t
+convS k = hv2repa . H.conv (repa2hv k) . repa2hvS
+
+convSIO :: (Product t, Numeric t) => Array F DIM1 t -> Array D DIM1 t -> IO (Array F DIM1 t)
+convSIO k = fmap (hv2repa . H.conv (repa2hv k)) . repa2hvSIO
+
+convP :: (Product t, Numeric t, Monad m) => Array F DIM1 t -> Array D DIM1 t -> m (Array F DIM1 t)
+convP k = fmap (hv2repa . H.conv (repa2hv k)) . repa2hvP
+
+convPIO :: (Product t, Numeric t) => Array F DIM1 t -> Array D DIM1 t -> IO (Array F DIM1 t)
+convPIO k = fmap (hv2repa . H.conv (repa2hv k)) . repa2hvPIO
+
+corrMin :: (Product t, Numeric t, RealElement t) => Array F DIM1 t -> Array F DIM1 t -> Array F DIM1 t
+-- ^Similar to 'corr' but using 'min' instead of (*).
+corrMin k = hv2repa . H.corrMin (repa2hv k) . repa2hv
+
+corrMinS :: (Product t, Numeric t, RealElement t) => Array F DIM1 t -> Array D DIM1 t -> Array F DIM1 t
+corrMinS k = hv2repa . H.corrMin (repa2hv k) . repa2hvS
+
+corrMinSIO :: (Product t, Numeric t, RealElement t) => Array F DIM1 t -> Array D DIM1 t -> IO (Array F DIM1 t)
+corrMinSIO k = fmap (hv2repa . H.corrMin (repa2hv k)) . repa2hvSIO
+
+corrMinP :: (Product t, Numeric t, RealElement t, Monad m) => Array F DIM1 t -> Array D DIM1 t -> m (Array F DIM1 t)
+corrMinP k = fmap (hv2repa . H.corrMin (repa2hv k)) . repa2hvP
+
+corrMinPIO :: (Product t, Numeric t, RealElement t) => Array F DIM1 t -> Array D DIM1 t -> IO (Array F DIM1 t)
+corrMinPIO k = fmap (hv2repa . H.corrMin (repa2hv k)) . repa2hvPIO
+
+corr2 :: (Product t, Numeric t) => Array F DIM2 t -> Array F DIM2 t -> Array F DIM2 t
+-- ^2D correlation (without padding).
+corr2 k = hm2repa . H.corr2 (repa2hm k) . repa2hm
+
+corr2S :: (Product t, Numeric t) => Array F DIM2 t -> Array D DIM2 t -> Array F DIM2 t
+corr2S k = hm2repa . H.corr2 (repa2hm k) . repa2hmS
+
+corr2SIO :: (Product t, Numeric t) => Array F DIM2 t -> Array D DIM2 t -> IO (Array F DIM2 t)
+corr2SIO k = fmap (hm2repa . H.corr2 (repa2hm k)) . repa2hmSIO
+
+corr2P :: (Product t, Numeric t, Monad m) => Array F DIM2 t -> Array D DIM2 t -> m (Array F DIM2 t)
+corr2P k = fmap (hm2repa . H.corr2 (repa2hm k)) . repa2hmP
+
+corr2PIO :: (Product t, Numeric t) => Array F DIM2 t -> Array D DIM2 t -> IO (Array F DIM2 t)
+corr2PIO k = fmap (hm2repa . H.corr2 (repa2hm k)) . repa2hmPIO
+
+conv2 :: (Product t, Numeric t, Num (Vector t)) => Array F DIM2 t -> Array F DIM2 t -> Array F DIM2 t
+-- ^2D convolution.
+conv2 k = hm2repa . H.conv2 (repa2hm k) . repa2hm 
+
+conv2S :: (Product t, Numeric t, Num (Vector t)) => Array F DIM2 t -> Array D DIM2 t -> Array F DIM2 t
+conv2S k = hm2repa . H.conv2 (repa2hm k) . repa2hmS
+
+conv2SIO :: (Product t, Numeric t, Num (Vector t)) => Array F DIM2 t -> Array D DIM2 t -> IO (Array F DIM2 t)
+conv2SIO k = fmap (hm2repa . H.conv2 (repa2hm k)) . repa2hmSIO
+
+conv2P :: (Product t, Numeric t, Num (Vector t), Monad m) => Array F DIM2 t -> Array D DIM2 t -> m (Array F DIM2 t)
+conv2P k = fmap (hm2repa . H.conv2 (repa2hm k)) . repa2hmP
+
+conv2PIO :: (Product t, Numeric t, Num (Vector t)) => Array F DIM2 t -> Array D DIM2 t -> IO (Array F DIM2 t)
+conv2PIO k = fmap (hm2repa . H.conv2 (repa2hm k)) . repa2hmPIO
