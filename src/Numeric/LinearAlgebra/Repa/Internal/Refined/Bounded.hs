@@ -5,10 +5,11 @@
   , GADTs
   , GeneralizedNewtypeDeriving
   , ScopedTypeVariables
+  , TypeFamilies
   , TypeOperators
   #-}
 
-module Numeric.LinearAlgebra.Repa.Internal.Indexed.Bounded where
+module Numeric.LinearAlgebra.Repa.Internal.Refined.Bounded where
 
 import Prelude hiding (Bounded)
 
@@ -21,8 +22,7 @@ import GHC.TypeLits
 stage :: String
 stage = "Numeric.LinearAlgebra.Repa.Indexed.Bounded"
 
-newtype Bounded (n :: Nat) where
-    Bounded :: Int -> Bounded n
+newtype Bounded (n :: Nat) = Bounded Int
   deriving (Eq)
 
 instance KnownNat n => Show (Bounded n) where
