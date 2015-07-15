@@ -18,13 +18,10 @@ cabal-version:       >=1.10
 library
   exposed-modules:     Numeric.LinearAlgebra.Repa
                        Numeric.LinearAlgebra.Repa.Conversion
-                       Numeric.LinearAlgebra.Repa.Internal.Indexed.Bounded
   -- other-modules:       
   -- other-extensions:    
   build-depends:       base >=4.8 && <4.9
                      , hmatrix
-                     , lens
-                     , reflection >= 2
                      , repa
                      , vector
   hs-source-dirs:      src
