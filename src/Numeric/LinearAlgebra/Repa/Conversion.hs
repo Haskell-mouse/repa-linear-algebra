@@ -1,8 +1,8 @@
-{-# LANGUAGE 
+{-# LANGUAGE
     FlexibleContexts
   , FlexibleInstances
   , TypeFamilies
-  , TypeSynonymInstances 
+  , TypeSynonymInstances
   #-}
 
 module Numeric.LinearAlgebra.Repa.Conversion
@@ -81,7 +81,7 @@ repa2hvSIO :: Storable t => Array D DIM1 t -> IO (H.Vector t)
 -- ^O(1). Convert a Repa Array to a HMatrix Vector sequentially inside the IO monad.
 repa2hvSIO r = do
     ptr <- mallocForeignPtrArray ln
-    computeIntoS ptr r 
+    computeIntoS ptr r
     return $ V.unsafeFromForeignPtr0 ptr ln
   where ln = size $ extent r
 
@@ -93,21 +93,21 @@ repa2hvPIO :: Storable t => Array D DIM1 t -> IO (H.Vector t)
 -- ^O(1). Convert a Repa Array to a HMatrix Vector in parallel inside the IO monad.
 repa2hvPIO r = do
     ptr <- mallocForeignPtrArray ln
-    computeIntoP ptr r 
+    computeIntoP ptr r
     return $ V.unsafeFromForeignPtr0 ptr ln
   where ln = size $ extent r
 
 -- Matrix conversion utilities
 
-hm2repa 
+hm2repa
   :: ( Storable t
      , Container V.Vector t
      , Element t
-     ) 
+     )
   => H.Matrix t -> Array F DIM2 t
 -- ^O(1). Convert a HMatrix Matrix to a Repa Array.
 hm2repa hm = fromForeignPtr (ix2 r c) ptr
-  where (ptr, _) = V.unsafeToForeignPtr0 $ H.flatten hm 
+  where (ptr, _) = V.unsafeToForeignPtr0 $ H.flatten hm
         (r  , c) = H.size hm
 
 repa2hm :: Storable t => Array F DIM2 t -> H.Matrix t
@@ -125,7 +125,7 @@ repa2hmSIO :: Storable t => Array D DIM2 t -> IO (H.Matrix t)
 -- ^O(1). Convert a Repa Array to a HMatrix Matrix sequentially inside the IO monad.
 repa2hmSIO r = do
     ptr <- mallocForeignPtrArray ln
-    computeIntoS ptr r 
+    computeIntoS ptr r
     return . H.reshape c  $ V.unsafeFromForeignPtr0 ptr ln
   where ln = size e
         (_:c:[]) = listOfShape e
@@ -139,10 +139,8 @@ repa2hmPIO :: Storable t => Array D DIM2 t -> IO (H.Matrix t)
 -- ^O(1). Convert a Repa Array to a HMatrix Matrix in parallel inside the IO monad.
 repa2hmPIO r = do
     ptr <- mallocForeignPtrArray ln
-    computeIntoP ptr r 
+    computeIntoP ptr r
     return . H.reshape c  $ V.unsafeFromForeignPtr0 ptr ln
   where ln = size e
         (_:c:[]) = listOfShape e
         e = extent r
-
-

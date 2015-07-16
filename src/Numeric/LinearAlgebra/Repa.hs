@@ -1,9 +1,11 @@
 {-# LANGUAGE FlexibleContexts #-}
 
-module Numeric.LinearAlgebra.Repa 
+module Numeric.LinearAlgebra.Repa
   ( Numeric
   , Field
   , Product
+  , RandDist(..)
+  , Seed
   , HShape(..)
   , LSDiv
   -- * Dot product
@@ -313,6 +315,14 @@ module Numeric.LinearAlgebra.Repa
   , conv2SIO
   , conv2P
   , conv2PIO
+  -- *Random vectors and matrices
+  , randomVector
+  , randomMatrix
+  , gaussianSample
+  , uniformSample
+  -- *Misc
+  , meanCov
+  , rowOuters
   ) where
 
 import Numeric.LinearAlgebra.Repa.Conversion
@@ -320,13 +330,13 @@ import Numeric.LinearAlgebra.Repa.Conversion
 import Data.Array.Repa hiding (rank)
 import Data.Array.Repa.Repr.ForeignPtr
 import qualified Numeric.LinearAlgebra.HMatrix as H
-import Numeric.LinearAlgebra.HMatrix (Complex, Numeric, Field, LSDiv, Normed, Product, Vector, RealElement)
+import Numeric.LinearAlgebra.HMatrix (Complex, Numeric, Field, LSDiv, Normed, Product, Vector, RealElement, RandDist(..), Seed)
 
 -- Dot product
 
 dot :: Numeric t => Array F DIM1 t -> Array F DIM1 t -> t
 -- ^Vector dot product.
-dot v u = repa2hv v `H.dot` repa2hv u 
+dot v u = repa2hv v `H.dot` repa2hv u
 
 dotS :: Numeric t => Array D DIM1 t -> Array D DIM1 t -> t
 -- ^Vector dot product. Arguments computed sequentially.
@@ -541,7 +551,7 @@ linearSolveLS :: (Field t, Numeric t) => Array F DIM2 t -> Array F DIM2 t -> Arr
 -- ^Least squared error solution of an overcompensated system, or the minimum norm solution of an undercompensated system. For rank-deficient systems use 'linearSolveSVD'.
 linearSolveLS m n = hm2repa $ H.linearSolveLS (repa2hm m) (repa2hm n)
 
-linearSolveLS_S :: (Field t, Numeric t) => Array D DIM2 t -> Array D DIM2 t -> Array F DIM2 t 
+linearSolveLS_S :: (Field t, Numeric t) => Array D DIM2 t -> Array D DIM2 t -> Array F DIM2 t
 linearSolveLS_S m n = hm2repa $ H.linearSolveLS (repa2hmS m) (repa2hmS n)
 
 linearSolveLS_SIO :: (Field t, Numeric t) => Array D DIM2 t -> Array D DIM2 t -> IO (Array F DIM2 t)
@@ -558,7 +568,7 @@ linearSolveSVD :: (Field t, Numeric t) => Array F DIM2 t -> Array F DIM2 t -> Ar
 -- ^Minimum norm solution of a general linear least squares problem Ax=b using the SVD. Admits rank-deficient systems but is slower than 'linearSolveLS'. The effective rank of A is determined by treating as zero those singular values which are less than eps times the largest singular value.
 linearSolveSVD m n = hm2repa $ H.linearSolveSVD (repa2hm m) (repa2hm n)
 
-linearSolveSVD_S :: (Field t, Numeric t) => Array D DIM2 t -> Array D DIM2 t -> Array F DIM2 t 
+linearSolveSVD_S :: (Field t, Numeric t) => Array D DIM2 t -> Array D DIM2 t -> Array F DIM2 t
 linearSolveSVD_S m n = hm2repa $ H.linearSolveSVD (repa2hmS m) (repa2hmS n)
 
 linearSolveSVD_SIO :: (Field t, Numeric t) => Array D DIM2 t -> Array D DIM2 t -> IO (Array F DIM2 t)
@@ -707,23 +717,23 @@ detPIO = fmap H.det . repa2hmPIO
 invlndet :: (Field t, Numeric t) => Array F DIM2 t -> (Array F DIM2 t, (t, t)) -- ^(inverse, (log abs det, sign or phase of det))
 -- ^Joint computation of inverse and logarithm of determinant of a square matrix.
 invlndet m = let (h, r) = H.invlndet $ repa2hm m in (hm2repa h, r)
-  
+
 invlndetS :: (Field t, Numeric t) => Array D DIM2 t -> (Array F DIM2 t, (t, t))
 invlndetS m = let (h, r) = H.invlndet $ repa2hmS m in (hm2repa h, r)
 
 invlndetSIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, (t, t))
-invlndetSIO m = do 
-  (h, r) <- H.invlndet <$> repa2hmSIO m 
+invlndetSIO m = do
+  (h, r) <- H.invlndet <$> repa2hmSIO m
   return (hm2repa h, r)
 
 invlndetP :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM2 t, (t, t))
-invlndetP m = do 
-  (h, r) <- H.invlndet <$> repa2hmP m 
+invlndetP m = do
+  (h, r) <- H.invlndet <$> repa2hmP m
   return (hm2repa h, r)
 
 invlndetPIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, (t, t))
-invlndetPIO m = do 
-  (h, r) <- H.invlndet <$> repa2hmPIO m 
+invlndetPIO m = do
+  (h, r) <- H.invlndet <$> repa2hmPIO m
   return (hm2repa h, r)
 
 -- Norms
@@ -836,17 +846,17 @@ svdS m = let (u,s,v) = H.svd $ repa2hmS m in (hm2repa u, hv2repa s, hm2repa v)
 
 svdSIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Array F DIM1 Double, Array F DIM2 t)
 svdSIO m = do
-  (u,s,v) <- H.svd <$> repa2hmSIO m 
+  (u,s,v) <- H.svd <$> repa2hmSIO m
   return (hm2repa u, hv2repa s, hm2repa v)
 
 svdP :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM2 t, Array F DIM1 Double, Array F DIM2 t)
 svdP m = do
-  (u,s,v) <- H.svd <$> repa2hmP m 
+  (u,s,v) <- H.svd <$> repa2hmP m
   return (hm2repa u, hv2repa s, hm2repa v)
 
 svdPIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Array F DIM1 Double, Array F DIM2 t)
 svdPIO m = do
-  (u,s,v) <- H.svd <$> repa2hmPIO m 
+  (u,s,v) <- H.svd <$> repa2hmPIO m
   return (hm2repa u, hv2repa s, hm2repa v)
 
 thinSVD :: (Field t, Numeric t) => Array F DIM2 t -> (Array F DIM2 t, Array F DIM1 Double, Array F DIM2 t)
@@ -858,17 +868,17 @@ thinSVD_S m = let (u,s,v) = H.thinSVD $ repa2hmS m in (hm2repa u, hv2repa s, hm2
 
 thinSVD_SIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Array F DIM1 Double, Array F DIM2 t)
 thinSVD_SIO m = do
-  (u,s,v) <- H.thinSVD <$> repa2hmSIO m 
+  (u,s,v) <- H.thinSVD <$> repa2hmSIO m
   return (hm2repa u, hv2repa s, hm2repa v)
 
 thinSVD_P :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM2 t, Array F DIM1 Double, Array F DIM2 t)
 thinSVD_P m = do
-  (u,s,v) <- H.thinSVD <$> repa2hmP m 
+  (u,s,v) <- H.thinSVD <$> repa2hmP m
   return (hm2repa u, hv2repa s, hm2repa v)
 
 thinSVD_PIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Array F DIM1 Double, Array F DIM2 t)
 thinSVD_PIO m = do
-  (u,s,v) <- H.thinSVD <$> repa2hmPIO m 
+  (u,s,v) <- H.thinSVD <$> repa2hmPIO m
   return (hm2repa u, hv2repa s, hm2repa v)
 
 compactSVD :: (Field t, Numeric t) => Array F DIM2 t -> (Array F DIM2 t, Array F DIM1 Double, Array F DIM2 t)
@@ -880,17 +890,17 @@ compactSVD_S m = let (u,s,v) = H.compactSVD $ repa2hmS m in (hm2repa u, hv2repa 
 
 compactSVD_SIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Array F DIM1 Double, Array F DIM2 t)
 compactSVD_SIO m = do
-  (u,s,v) <- H.compactSVD <$> repa2hmSIO m 
+  (u,s,v) <- H.compactSVD <$> repa2hmSIO m
   return (hm2repa u, hv2repa s, hm2repa v)
 
 compactSVD_P :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM2 t, Array F DIM1 Double, Array F DIM2 t)
 compactSVD_P m = do
-  (u,s,v) <- H.compactSVD <$> repa2hmP m 
+  (u,s,v) <- H.compactSVD <$> repa2hmP m
   return (hm2repa u, hv2repa s, hm2repa v)
 
 compactSVD_PIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Array F DIM1 Double, Array F DIM2 t)
 compactSVD_PIO m = do
-  (u,s,v) <- H.compactSVD <$> repa2hmPIO m 
+  (u,s,v) <- H.compactSVD <$> repa2hmPIO m
   return (hm2repa u, hv2repa s, hm2repa v)
 
 singularValues :: (Field t, Numeric t) => Array F DIM2 t -> Array F DIM1 Double
@@ -918,17 +928,17 @@ leftSV_S m = let (u,s) = H.leftSV $ repa2hmS m in (hm2repa u, hv2repa s)
 
 leftSV_SIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Array F DIM1 Double)
 leftSV_SIO m = do
-  (u,s) <- H.leftSV <$> repa2hmSIO m 
+  (u,s) <- H.leftSV <$> repa2hmSIO m
   return (hm2repa u, hv2repa s)
 
 leftSV_P :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM2 t, Array F DIM1 Double)
 leftSV_P m = do
-  (u,s) <- H.leftSV <$> repa2hmP m 
+  (u,s) <- H.leftSV <$> repa2hmP m
   return (hm2repa u, hv2repa s)
 
 leftSV_PIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Array F DIM1 Double)
 leftSV_PIO m = do
-  (u,s) <- H.leftSV <$> repa2hmPIO m 
+  (u,s) <- H.leftSV <$> repa2hmPIO m
   return (hm2repa u, hv2repa s)
 
 rightSV :: (Field t, Numeric t) => Array F DIM2 t -> (Array F DIM1 Double, Array F DIM2 t)
@@ -940,17 +950,17 @@ rightSV_S m = let (s,v) = H.rightSV $ repa2hmS m in (hv2repa s, hm2repa v)
 
 rightSV_SIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM1 Double, Array F DIM2 t)
 rightSV_SIO m = do
-  (s,v) <- H.rightSV <$> repa2hmSIO m 
+  (s,v) <- H.rightSV <$> repa2hmSIO m
   return (hv2repa s, hm2repa v)
 
 rightSV_P :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM1 Double, Array F DIM2 t)
 rightSV_P m = do
-  (s,v) <- H.rightSV <$> repa2hmP m 
+  (s,v) <- H.rightSV <$> repa2hmP m
   return (hv2repa s, hm2repa v)
 
 rightSV_PIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM1 Double, Array F DIM2 t)
 rightSV_PIO m = do
-  (s,v) <- H.rightSV <$> repa2hmPIO m 
+  (s,v) <- H.rightSV <$> repa2hmPIO m
   return (hv2repa s, hm2repa v)
 
 -- Eigensystems
@@ -964,17 +974,17 @@ eigS m = let (s,v) = H.eig $ repa2hmS m in (hv2repa s, hm2repa v)
 
 eigSIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM1 (Complex Double), Array F DIM2 (Complex Double))
 eigSIO m = do
-  (s,v) <- H.eig <$> repa2hmSIO m 
+  (s,v) <- H.eig <$> repa2hmSIO m
   return (hv2repa s, hm2repa v)
 
 eigP :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM1 (Complex Double), Array F DIM2 (Complex Double))
 eigP m = do
-  (s,v) <- H.eig <$> repa2hmP m 
+  (s,v) <- H.eig <$> repa2hmP m
   return (hv2repa s, hm2repa v)
 
 eigPIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM1 (Complex Double), Array F DIM2 (Complex Double))
 eigPIO m = do
-  (s,v) <- H.eig <$> repa2hmPIO m 
+  (s,v) <- H.eig <$> repa2hmPIO m
   return (hv2repa s, hm2repa v)
 
 eigSH :: (Field t, Numeric t) => Array F DIM2 t -> (Array F DIM1 Double, Array F DIM2 t)
@@ -986,17 +996,17 @@ eigSH_S m = let (s,v) = H.eigSH $ repa2hmS m in (hv2repa s, hm2repa v)
 
 eigSH_SIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM1 Double, Array F DIM2 t)
 eigSH_SIO m = do
-  (s,v) <- H.eigSH <$> repa2hmSIO m 
+  (s,v) <- H.eigSH <$> repa2hmSIO m
   return (hv2repa s, hm2repa v)
 
 eigSH_P :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM1 Double, Array F DIM2 t)
 eigSH_P m = do
-  (s,v) <- H.eigSH <$> repa2hmP m 
+  (s,v) <- H.eigSH <$> repa2hmP m
   return (hv2repa s, hm2repa v)
 
 eigSH_PIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM1 Double, Array F DIM2 t)
 eigSH_PIO m = do
-  (s,v) <- H.eigSH <$> repa2hmPIO m 
+  (s,v) <- H.eigSH <$> repa2hmPIO m
   return (hv2repa s, hm2repa v)
 
 eigSH' :: (Field t, Numeric t) => Array F DIM2 t -> (Array F DIM1 Double, Array F DIM2 t)
@@ -1008,17 +1018,17 @@ eigSH'S m = let (s,v) = H.eigSH' $ repa2hmS m in (hv2repa s, hm2repa v)
 
 eigSH'SIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM1 Double, Array F DIM2 t)
 eigSH'SIO m = do
-  (s,v) <- H.eigSH' <$> repa2hmSIO m 
+  (s,v) <- H.eigSH' <$> repa2hmSIO m
   return (hv2repa s, hm2repa v)
 
 eigSH'P :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM1 Double, Array F DIM2 t)
 eigSH'P m = do
-  (s,v) <- H.eigSH' <$> repa2hmP m 
+  (s,v) <- H.eigSH' <$> repa2hmP m
   return (hv2repa s, hm2repa v)
 
 eigSH'PIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM1 Double, Array F DIM2 t)
 eigSH'PIO m = do
-  (s,v) <- H.eigSH' <$> repa2hmPIO m 
+  (s,v) <- H.eigSH' <$> repa2hmPIO m
   return (hv2repa s, hm2repa v)
 
 eigenvalues :: (Field t, Numeric t) => Array F DIM2 t -> Array F DIM1 (Complex Double)
@@ -1102,17 +1112,17 @@ qrS m = let (q,r) = H.qr $ repa2hmS m in (hm2repa q, hm2repa r)
 
 qrSIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Array F DIM2 t)
 qrSIO m = do
-  (q,r) <- H.qr <$> repa2hmSIO m 
+  (q,r) <- H.qr <$> repa2hmSIO m
   return (hm2repa q, hm2repa r)
 
 qrP :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM2 t, Array F DIM2 t)
 qrP m = do
-  (q,r) <- H.qr <$> repa2hmP m 
+  (q,r) <- H.qr <$> repa2hmP m
   return (hm2repa q, hm2repa r)
 
 qrPIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Array F DIM2 t)
 qrPIO m = do
-  (q,r) <- H.qr <$> repa2hmPIO m 
+  (q,r) <- H.qr <$> repa2hmPIO m
   return (hm2repa q, hm2repa r)
 
 rq :: (Field t, Numeric t) => Array F DIM2 t -> (Array F DIM2 t, Array F DIM2 t)
@@ -1123,18 +1133,18 @@ rqS :: (Field t, Numeric t) => Array D DIM2 t -> (Array F DIM2 t, Array F DIM2 t
 rqS m = let (r,q) = H.rq $ repa2hmS m in (hm2repa r, hm2repa q)
 
 rqSIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Array F DIM2 t)
-rqSIO m = do 
-  (r,q) <- H.rq <$> repa2hmSIO m 
+rqSIO m = do
+  (r,q) <- H.rq <$> repa2hmSIO m
   return (hm2repa r, hm2repa q)
 
 rqP :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM2 t, Array F DIM2 t)
-rqP m = do 
-  (r,q) <- H.rq <$> repa2hmP m 
+rqP m = do
+  (r,q) <- H.rq <$> repa2hmP m
   return (hm2repa r, hm2repa q)
 
 rqPIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Array F DIM2 t)
-rqPIO m = do 
-  (r,q) <- H.rq <$> repa2hmPIO m 
+rqPIO m = do
+  (r,q) <- H.rq <$> repa2hmPIO m
   return (hm2repa r, hm2repa q)
 
 qrRaw :: (Field t, Numeric t) => Array F DIM2 t -> (Array F DIM2 t, Array F DIM1 t)
@@ -1145,17 +1155,17 @@ qrRawS m = let (n,v) = H.qrRaw $ repa2hmS m in (hm2repa n, hv2repa v)
 
 qrRawSIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Array F DIM1 t)
 qrRawSIO m = do
-  (n,v) <- H.qrRaw <$> repa2hmSIO m 
+  (n,v) <- H.qrRaw <$> repa2hmSIO m
   return (hm2repa n, hv2repa v)
 
 qrRawP :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM2 t, Array F DIM1 t)
 qrRawP m = do
-  (n,v) <- H.qrRaw <$> repa2hmP m 
+  (n,v) <- H.qrRaw <$> repa2hmP m
   return (hm2repa n, hv2repa v)
 
 qrRawPIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Array F DIM1 t)
 qrRawPIO m = do
-  (n,v) <- H.qrRaw <$> repa2hmPIO m 
+  (n,v) <- H.qrRaw <$> repa2hmPIO m
   return (hm2repa n, hv2repa v)
 
 qrgr :: (Field t, Numeric t) => Int -> (Array F DIM2 t, Array F DIM1 t) -> Array F DIM2 t
@@ -1206,18 +1216,18 @@ hessS :: (Field t, Numeric t) => Array D DIM2 t -> (Array F DIM2 t, Array F DIM2
 hessS m = let (p,h) = H.hess $ repa2hmS m in (hm2repa p, hm2repa h)
 
 hessSIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Array F DIM2 t)
-hessSIO m = do 
-  (p,h) <- H.hess <$> repa2hmSIO m 
+hessSIO m = do
+  (p,h) <- H.hess <$> repa2hmSIO m
   return (hm2repa p, hm2repa h)
 
 hessP :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM2 t, Array F DIM2 t)
-hessP m = do 
-  (p,h) <- H.hess <$> repa2hmP m 
+hessP m = do
+  (p,h) <- H.hess <$> repa2hmP m
   return (hm2repa p, hm2repa h)
 
 hessPIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Array F DIM2 t)
-hessPIO m = do 
-  (p,h) <- H.hess <$> repa2hmPIO m 
+hessPIO m = do
+  (p,h) <- H.hess <$> repa2hmPIO m
   return (hm2repa p, hm2repa h)
 
 -- Schur
@@ -1229,18 +1239,18 @@ schurS :: (Field t, Numeric t) => Array D DIM2 t -> (Array F DIM2 t, Array F DIM
 schurS m = let (u,s) = H.schur $ repa2hmS m in (hm2repa u, hm2repa s)
 
 schurSIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Array F DIM2 t)
-schurSIO m = do 
-  (u,s) <- H.schur <$> repa2hmSIO m 
+schurSIO m = do
+  (u,s) <- H.schur <$> repa2hmSIO m
   return (hm2repa u, hm2repa s)
 
 schurP :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM2 t, Array F DIM2 t)
-schurP m = do 
-  (u,s) <- H.schur <$> repa2hmP m 
+schurP m = do
+  (u,s) <- H.schur <$> repa2hmP m
   return (hm2repa u, hm2repa s)
 
 schurPIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Array F DIM2 t)
-schurPIO m = do 
-  (u,s) <- H.schur <$> repa2hmPIO m 
+schurPIO m = do
+  (u,s) <- H.schur <$> repa2hmPIO m
   return (hm2repa u, hm2repa s)
 
 -- LU
@@ -1254,17 +1264,17 @@ luS m = let (l,u,p,s) = H.lu $ repa2hmS m in (hm2repa l, hm2repa u, hm2repa p, s
 
 luSIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Array F DIM2 t, Array F DIM2 t, t)
 luSIO m = do
-  (l,u,p,s) <- H.lu <$> repa2hmSIO m 
+  (l,u,p,s) <- H.lu <$> repa2hmSIO m
   return (hm2repa l, hm2repa u, hm2repa p, s)
 
 luP :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM2 t, Array F DIM2 t, Array F DIM2 t, t)
 luP m = do
-  (l,u,p,s) <- H.lu <$> repa2hmP m 
+  (l,u,p,s) <- H.lu <$> repa2hmP m
   return (hm2repa l, hm2repa u, hm2repa p, s)
 
 luPIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Array F DIM2 t, Array F DIM2 t, t)
 luPIO m = do
-  (l,u,p,s) <- H.lu <$> repa2hmPIO m 
+  (l,u,p,s) <- H.lu <$> repa2hmPIO m
   return (hm2repa l, hm2repa u, hm2repa p, s)
 
 data PackedLU t = PackedLU (H.Matrix t) [Int]
@@ -1278,17 +1288,17 @@ luPackedS m = let (lu', is) = H.luPacked $ repa2hmS m in PackedLU lu' is
 
 luPackedSIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (PackedLU t)
 luPackedSIO m = do
-  (lu', is) <- H.luPacked <$> repa2hmSIO m 
+  (lu', is) <- H.luPacked <$> repa2hmSIO m
   return $ PackedLU lu' is
 
 luPackedP :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (PackedLU t)
 luPackedP m = do
-  (lu', is) <- H.luPacked <$> repa2hmP m 
+  (lu', is) <- H.luPacked <$> repa2hmP m
   return $ PackedLU lu' is
 
 luPackedPIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (PackedLU t)
 luPackedPIO m = do
-  (lu', is) <- H.luPacked <$> repa2hmPIO m 
+  (lu', is) <- H.luPacked <$> repa2hmPIO m
   return $ PackedLU lu' is
 
 -- Matrix functions
@@ -1409,7 +1419,7 @@ corr2PIO k = fmap (hm2repa . H.corr2 (repa2hm k)) . repa2hmPIO
 
 conv2 :: (Product t, Numeric t, Num (Vector t)) => Array F DIM2 t -> Array F DIM2 t -> Array F DIM2 t
 -- ^2D convolution.
-conv2 k = hm2repa . H.conv2 (repa2hm k) . repa2hm 
+conv2 k = hm2repa . H.conv2 (repa2hm k) . repa2hm
 
 conv2S :: (Product t, Numeric t, Num (Vector t)) => Array F DIM2 t -> Array D DIM2 t -> Array F DIM2 t
 conv2S k = hm2repa . H.conv2 (repa2hm k) . repa2hmS
@@ -1422,3 +1432,33 @@ conv2P k = fmap (hm2repa . H.conv2 (repa2hm k)) . repa2hmP
 
 conv2PIO :: (Product t, Numeric t, Num (Vector t)) => Array F DIM2 t -> Array D DIM2 t -> IO (Array F DIM2 t)
 conv2PIO k = fmap (hm2repa . H.conv2 (repa2hm k)) . repa2hmPIO
+
+-- Random arrays
+
+randomVector :: Seed -> RandDist -> Int -> Array F DIM1 Double
+-- ^Pseudorandom vector of na given size. Usee 'randomIO' to get a random seed.
+randomVector s d n = hv2repa $ H.randomVector s d n
+
+randomMatrix :: RandDist -> Int -> Int -> IO (Array F DIM2 Double)
+randomMatrix d a b = fmap hm2repa
+  $ case d of
+       Uniform    -> H.rand a b
+       Gaussian -> H.randn a b
+
+gaussianSample :: Seed -> Int -> Array F DIM1 Double -> Array F DIM2 Double -> Array F DIM2 Double
+-- ^A matrix whose rows are pseudorandom samples from a multivariate Gaussian distribution.
+gaussianSample s r mean cov = hm2repa $ H.gaussianSample s r (repa2hv mean) (repa2hm cov)
+
+uniformSample :: Seed -> Int -> [(Double,Double)] -> Array F DIM2 Double
+-- ^A matrix whose rows are pseudorandom samples from a multivariate uniform distribution.
+uniformSample s r rng = hm2repa $ H.uniformSample s r rng
+
+-- misc
+
+meanCov :: Array F DIM2 Double -> (Array F DIM1 Double, Array F DIM2 Double)
+-- ^Compute mean vector and a covariance matrix of the rows of a matrix.
+meanCov m = let (v,c) = H.meanCov $ repa2hm m in (hv2repa v, hm2repa c)
+
+rowOuters :: Array F DIM2 Double -> Array F DIM2 Double -> Array F DIM2 Double
+-- ^Outer product of the rows of the matrices.
+rowOuters m n = hm2repa $ H.rowOuters (repa2hm m) (repa2hm n)

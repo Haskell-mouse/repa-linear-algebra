@@ -1,2 +1,2 @@
-# repa-hmatrix
+# repa-linear-algebra
 HMatrix operations for Repa.
