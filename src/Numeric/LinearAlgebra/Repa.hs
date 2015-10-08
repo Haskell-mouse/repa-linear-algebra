@@ -4,6 +4,8 @@ module Numeric.LinearAlgebra.Repa
   ( Numeric
   , Field
   , Product
+  , Vector
+  , H.Matrix
   , RandDist(..)
   , Seed
   , HShape(..)
