@@ -152,11 +152,13 @@ module Numeric.LinearAlgebra.Repa
   , null1SIO
   , null1P
   , null1PIO
+  {-
   , null1sym
   , null1symS
   , null1symSIO
   , null1symP
   , null1symPIO
+  -}
   -- * SVD
   , svd
   , svdS
@@ -194,6 +196,7 @@ module Numeric.LinearAlgebra.Repa
   , eigSIO
   , eigP
   , eigPIO
+  {-
   , eigSH
   , eigSH_S
   , eigSH_SIO
@@ -204,11 +207,13 @@ module Numeric.LinearAlgebra.Repa
   , eigSH'SIO
   , eigSH'P
   , eigSH'PIO
+  -}
   , eigenvalues
   , eigenvaluesS
   , eigenvaluesSIO
   , eigenvaluesP
   , eigenvaluesPIO
+  {-
   , eigenvaluesSH
   , eigenvaluesSH_S
   , eigenvaluesSH_SIO
@@ -224,6 +229,7 @@ module Numeric.LinearAlgebra.Repa
   , geigSH'SIO
   , geigSH'P
   , geigSH'PIO
+  -}
   -- * QR
   , qr
   , qrS
@@ -241,6 +247,7 @@ module Numeric.LinearAlgebra.Repa
   , qrRawP
   , qrRawPIO
   , qrgr
+  {-
   -- * Cholesky
   , chol
   , cholS
@@ -252,6 +259,7 @@ module Numeric.LinearAlgebra.Repa
   , chol'SIO
   , chol'P
   , chol'PIO
+  -}
   -- * Hessenberg
   , hess
   , hessS
@@ -583,21 +591,21 @@ linearSolveSVD_PIO :: (Field t, Numeric t) => Array D DIM2 t -> Array D DIM2 t -
 linearSolveSVD_PIO m n = hm2repa <$> (H.linearSolveLS <$> repa2hmPIO m <*> repa2hmPIO n)
 
 
-luSolve :: (Field t, Numeric t) => PackedLU t -> Array F DIM2 t -> Array F DIM2 t
+luSolve :: (Field t, Numeric t) => H.LU t -> Array F DIM2 t -> Array F DIM2 t
 -- ^Solution of a linear system (for several right hand sides) from the precomputed LU factorization obtained by 'luPacked'.
-luSolve (PackedLU lu' l) m = hm2repa $ H.luSolve (lu', l) (repa2hm m)
+luSolve lu' m = hm2repa $ H.luSolve lu' (repa2hm m)
 
-luSolveS :: (Field t, Numeric t) => PackedLU t -> Array D DIM2 t -> Array F DIM2 t
-luSolveS (PackedLU lu' l) m = hm2repa $ H.luSolve (lu', l) (repa2hmS m)
+luSolveS :: (Field t, Numeric t) => H.LU t -> Array D DIM2 t -> Array F DIM2 t
+luSolveS lu' m = hm2repa $ H.luSolve lu' (repa2hmS m)
 
-luSolveSIO :: (Field t, Numeric t) => PackedLU t -> Array D DIM2 t -> IO (Array F DIM2 t)
-luSolveSIO (PackedLU lu' l) m = hm2repa . H.luSolve (lu', l) <$> repa2hmSIO m
+luSolveSIO :: (Field t, Numeric t) => H.LU t -> Array D DIM2 t -> IO (Array F DIM2 t)
+luSolveSIO lu' m = hm2repa . H.luSolve lu' <$> repa2hmSIO m
 
-luSolveP :: (Field t, Numeric t, Monad m) => PackedLU t -> Array D DIM2 t -> m (Array F DIM2 t)
-luSolveP (PackedLU lu' l) m = hm2repa . H.luSolve (lu', l) <$> repa2hmP m
+luSolveP :: (Field t, Numeric t, Monad m) => H.LU t -> Array D DIM2 t -> m (Array F DIM2 t)
+luSolveP lu' m = hm2repa . H.luSolve lu' <$> repa2hmP m
 
-luSolvePIO :: (Field t, Numeric t) => PackedLU t -> Array D DIM2 t -> IO (Array F DIM2 t)
-luSolvePIO (PackedLU lu' l) m = hm2repa . H.luSolve (lu', l) <$> repa2hmPIO m
+luSolvePIO :: (Field t, Numeric t) => H.LU t -> Array D DIM2 t -> IO (Array F DIM2 t)
+luSolvePIO lu' m = hm2repa . H.luSolve lu' <$> repa2hmPIO m
 
 
 cholSolve :: (Field t, Numeric t) => Array F DIM2 t -> Array F DIM2 t -> Array F DIM2 t
@@ -821,6 +829,9 @@ null1P = fmap (hv2repa . H.null1) . repa2hmP
 null1PIO :: Array D DIM2 Double -> IO (Array F DIM1 Double)
 null1PIO = fmap (hv2repa . H.null1) . repa2hmPIO
 
+{-
+TODO: implement these
+
 null1sym :: Array F DIM2 Double -> Array F DIM1 Double
 -- ^Solution of an overconstrained homogenous symmetric linear system.
 null1sym = hv2repa . H.null1sym . repa2hm
@@ -836,6 +847,7 @@ null1symP = fmap (hv2repa . H.null1sym) . repa2hmP
 
 null1symPIO :: Array D DIM2 Double -> IO (Array F DIM1 Double)
 null1symPIO = fmap (hv2repa . H.null1sym) . repa2hmPIO
+-}
 
 -- SVD
 
@@ -989,6 +1001,7 @@ eigPIO m = do
   (s,v) <- H.eig <$> repa2hmPIO m
   return (hv2repa s, hm2repa v)
 
+{-
 eigSH :: (Field t, Numeric t) => Array F DIM2 t -> (Array F DIM1 Double, Array F DIM2 t)
 -- ^Eigenvalues and eigenvectors (as columns) of a complex hermitian or a real symmetric matrix, in descending order.
 eigSH m = let (s,v) = H.eigSH $ repa2hm m in (hv2repa s, hm2repa v)
@@ -1032,6 +1045,7 @@ eigSH'PIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM1 Double, 
 eigSH'PIO m = do
   (s,v) <- H.eigSH' <$> repa2hmPIO m
   return (hv2repa s, hm2repa v)
+  -}
 
 eigenvalues :: (Field t, Numeric t) => Array F DIM2 t -> Array F DIM1 (Complex Double)
 -- ^Eigenvalues (not ordered) of a general square matrix.
@@ -1049,6 +1063,7 @@ eigenvaluesP = fmap (hv2repa . H.eigenvalues) . repa2hmP
 eigenvaluesPIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM1 (Complex Double))
 eigenvaluesPIO = fmap (hv2repa . H.eigenvalues) . repa2hmPIO
 
+{-
 eigenvaluesSH :: (Field t, Numeric t) => Array F DIM2 t -> Array F DIM1 Double
 -- ^Eigenvalues (in descending order) of a complex hermitian or real symmetric matrix.
 eigenvaluesSH = hv2repa . H.eigenvaluesSH . repa2hm
@@ -1102,6 +1117,7 @@ geigSH'PIO :: (Field t, Numeric t) => Array D DIM2 t -> Array D DIM2 t -> IO (Ar
 geigSH'PIO a b = do
   (s,v) <- H.geigSH' <$> repa2hmPIO a <*> repa2hmPIO b
   return (hv2repa s, hm2repa v)
+-}
 
 -- QR
 
@@ -1149,33 +1165,28 @@ rqPIO m = do
   (r,q) <- H.rq <$> repa2hmPIO m
   return (hm2repa r, hm2repa q)
 
-qrRaw :: (Field t, Numeric t) => Array F DIM2 t -> (Array F DIM2 t, Array F DIM1 t)
-qrRaw m = let (n,v) = H.qrRaw $ repa2hm m in (hm2repa n, hv2repa v)
+qrRaw :: (Field t, Numeric t) => Array F DIM2 t -> H.QR t
+qrRaw m = H.qrRaw $ repa2hm m
 
-qrRawS :: (Field t, Numeric t) => Array D DIM2 t -> (Array F DIM2 t, Array F DIM1 t)
-qrRawS m = let (n,v) = H.qrRaw $ repa2hmS m in (hm2repa n, hv2repa v)
+qrRawS :: (Field t, Numeric t) => Array D DIM2 t -> H.QR t
+qrRawS m = H.qrRaw $ repa2hmS m
 
-qrRawSIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Array F DIM1 t)
-qrRawSIO m = do
-  (n,v) <- H.qrRaw <$> repa2hmSIO m
-  return (hm2repa n, hv2repa v)
+qrRawSIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (H.QR t)
+qrRawSIO m = H.qrRaw <$> repa2hmSIO m
 
-qrRawP :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM2 t, Array F DIM1 t)
-qrRawP m = do
-  (n,v) <- H.qrRaw <$> repa2hmP m
-  return (hm2repa n, hv2repa v)
+qrRawP :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (H.QR t)
+qrRawP m = H.qrRaw <$> repa2hmP m
 
-qrRawPIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t, Array F DIM1 t)
-qrRawPIO m = do
-  (n,v) <- H.qrRaw <$> repa2hmPIO m
-  return (hm2repa n, hv2repa v)
+qrRawPIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (H.QR t)
+qrRawPIO m = H.qrRaw <$> repa2hmPIO m
 
-qrgr :: (Field t, Numeric t) => Int -> (Array F DIM2 t, Array F DIM1 t) -> Array F DIM2 t
+qrgr :: (Field t, Numeric t) => Int -> H.QR t -> Array F DIM2 t
 -- ^Generate a matrix with k othogonal columns from the output of 'qrRaw'.
-qrgr k (m,v) = hm2repa $ H.qrgr k (repa2hm m, repa2hv v)
+qrgr k qr' = hm2repa $ H.qrgr k qr'
 
 -- Cholesky
 
+{-
 chol :: (Field t, Numeric t) => Array F DIM2 t -> Array F DIM2 t
 -- ^Cholesky factorization of a positive definite hermitian or symmetric matrix. c = chol m ==> m == c' * c where c is upper triangular.
 chol = hm2repa . H.chol . repa2hm
@@ -1207,6 +1218,7 @@ chol'P = fmap (hm2repa . H.cholSH) . repa2hmP
 
 chol'PIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t)
 chol'PIO = fmap (hm2repa . H.cholSH) . repa2hmPIO
+-}
 
 -- Hessenberg
 
@@ -1279,29 +1291,21 @@ luPIO m = do
   (l,u,p,s) <- H.lu <$> repa2hmPIO m
   return (hm2repa l, hm2repa u, hm2repa p, s)
 
-data PackedLU t = PackedLU (H.Matrix t) [Int]
-
-luPacked :: (Field t, Numeric t) => Array F DIM2 t -> PackedLU t
+luPacked :: (Field t, Numeric t) => Array F DIM2 t -> H.LU t
 -- ^Obtains the LU decomposition in a packed data structure suitable for 'luSolve'.
-luPacked m = let (lu', is) = H.luPacked $ repa2hm m in PackedLU lu' is
+luPacked m =  H.luPacked $ repa2hm m 
 
-luPackedS :: (Field t, Numeric t) => Array D DIM2 t -> PackedLU t
-luPackedS m = let (lu', is) = H.luPacked $ repa2hmS m in PackedLU lu' is
+luPackedS :: (Field t, Numeric t) => Array D DIM2 t -> H.LU t
+luPackedS m = H.luPacked $ repa2hmS m
 
-luPackedSIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (PackedLU t)
-luPackedSIO m = do
-  (lu', is) <- H.luPacked <$> repa2hmSIO m
-  return $ PackedLU lu' is
+luPackedSIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (H.LU t)
+luPackedSIO m = H.luPacked <$> repa2hmSIO m
 
-luPackedP :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (PackedLU t)
-luPackedP m = do
-  (lu', is) <- H.luPacked <$> repa2hmP m
-  return $ PackedLU lu' is
+luPackedP :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (H.LU t)
+luPackedP m = H.luPacked <$> repa2hmP m
 
-luPackedPIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (PackedLU t)
-luPackedPIO m = do
-  (lu', is) <- H.luPacked <$> repa2hmPIO m
-  return $ PackedLU lu' is
+luPackedPIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (H.LU t)
+luPackedPIO m = H.luPacked <$> repa2hmPIO m
 
 -- Matrix functions
 

@@ -103,6 +103,7 @@ hm2repa
   :: ( Storable t
      , Container V.Vector t
      , Element t
+     , Num t
      )
   => H.Matrix t -> Array F DIM2 t
 -- ^O(1). Convert a HMatrix Matrix to a Repa Array.
