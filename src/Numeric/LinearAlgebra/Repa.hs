@@ -283,6 +283,13 @@ module Numeric.LinearAlgebra.Repa
   , luPackedSIO
   , luPackedP
   , luPackedPIO
+  -- * Symmetric indefinite
+  , ldlSolve
+  , ldlSolveS
+  , ldlSolveSIO
+  , ldlSolveP
+  , ldlSolvePIO
+  , ldlPacked
   -- * Matrix functions
   , expm
   , expmS
@@ -1306,6 +1313,33 @@ luPackedP m = H.luPacked <$> repa2hmP m
 
 luPackedPIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (H.LU t)
 luPackedPIO m = H.luPacked <$> repa2hmPIO m
+
+
+-- Symmetric indefinite
+
+ldlSolve :: Field t => H.LDL t -> Array F DIM2 t -> Array F DIM2 t
+{- ^
+Solution of a linear system (for several right hand sides) from a precomputed LDL factorization obtained by 'ldlPacked'.
+Note: this can be slower than the general solver based on the LU decomposition.
+-}
+
+ldlSolve l = hm2repa . H.ldlSolve l . repa2hm
+
+ldlSolveS :: Field t => H.LDL t -> Array D DIM2 t -> Array F DIM2 t
+ldlSolveS l = hm2repa . H.ldlSolve l . repa2hmS
+
+ldlSolveSIO :: Field t => H.LDL t -> Array D DIM2 t -> IO (Array F DIM2 t)
+ldlSolveSIO l m = hm2repa . H.ldlSolve l <$> repa2hmSIO m
+
+ldlSolveP :: (Field t, Monad m) => H.LDL t -> Array D DIM2 t -> m (Array F DIM2 t)
+ldlSolveP l m = hm2repa . H.ldlSolve l <$> repa2hmP m
+
+ldlSolvePIO :: Field t => H.LDL t -> Array D DIM2 t -> IO (Array F DIM2 t)
+ldlSolvePIO l m = hm2repa . H.ldlSolve l <$> repa2hmPIO m
+
+ldlPacked :: Field t => H.Herm t -> H.LDL t
+-- ^Obtains the LDL decomposition of a matrix in a compact data structure suitable for ldlSolve.
+ldlPacked = H.ldlPacked
 
 -- Matrix functions
 
