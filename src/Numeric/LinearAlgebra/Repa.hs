@@ -250,6 +250,7 @@ module Numeric.LinearAlgebra.Repa
   , luPackedSIO
   , luPackedP
   , luPackedPIO
+  , luFact
   -- * Symmetric indefinite
   , ldlSolve
   , ldlSolveS
@@ -1182,6 +1183,9 @@ luPackedP m = H.luPacked <$> repa2hmP m
 luPackedPIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (H.LU t)
 luPackedPIO m = H.luPacked <$> repa2hmPIO m
 
+luFact :: Numeric t => H.LU t -> (Array F DIM2 t, Array F DIM2 t, Array F DIM2 t, t)
+-- ^Compute the explicit LU decomposition from the compact one obtained by luPacked.
+luFact lu' = let (l,u,p,s) = H.luFact lu' in (hm2repa l, hm2repa u, hm2repa p, s)
 
 -- Symmetric indefinite
 
