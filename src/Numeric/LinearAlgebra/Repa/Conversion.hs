@@ -1,3 +1,19 @@
+{-|
+Module      : Numeric.LinearAlgebra.Repa.Conversion
+License     : BSD3
+Maintainer  : marcin.jan.mrotek@gmail.com
+Stability   : experimental
+
+Repa - HMatrix conversion functions.
+
+* Unqualified functions use raw 'F' arrays.
+* "-S" functions precompute 'D' arrays sequentially.
+* "-SIO" functions precompute 'D' arrays sequentially in the 'IO' monad.
+* "-P" functions precompute 'D' arrays in parralel in any monad.
+* "-PIO" functions precompute 'D' arrays in parralel in the 'IO' monad.
+
+-}
+
 {-# LANGUAGE
     FlexibleContexts
   , FlexibleInstances

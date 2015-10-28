@@ -1,15 +1,36 @@
+{-|
+Module      : Numeric.LinearAlgebra.Repa
+License     : BSD3
+Maintainer  : marcin.jan.mrotek@gmail.com
+Stability   : experimental
+
+HMatrix linear algebra functions wrapped to accept Repa arrays.
+
+* Unqualified functions use raw 'F' arrays.
+* "-S" functions precompute 'D' arrays sequentially.
+* "-SIO" functions precompute 'D' arrays sequentially in the 'IO' monad.
+* "-P" functions precompute 'D' arrays in parralel in any monad.
+* "-PIO" functions precompute 'D' arrays in parralel in the 'IO' monad.
+
+-}
+
 {-# LANGUAGE FlexibleContexts #-}
 
 module Numeric.LinearAlgebra.Repa
-  ( Numeric
+  (
+  -- * Typeclasses
+    Numeric
   , Field
   , Product
+  , LSDiv
+  -- * Shape-polymorphic conversion
+  , HShape(..)
+  -- * Data types
   , Vector
   , H.Matrix
   , RandDist(..)
   , Seed
-  , HShape(..)
-  , LSDiv
+  -- * Special types 
   , H.Herm
   , H.LU
   , H.LDL
