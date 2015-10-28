@@ -155,13 +155,7 @@ module Numeric.LinearAlgebra.Repa
   , null1SIO
   , null1P
   , null1PIO
-  {-
   , null1sym
-  , null1symS
-  , null1symSIO
-  , null1symP
-  , null1symPIO
-  -}
   -- * SVD
   , svd
   , svdS
@@ -821,25 +815,9 @@ null1P = fmap (hv2repa . H.null1) . repa2hmP
 null1PIO :: Array D DIM2 Double -> IO (Array F DIM1 Double)
 null1PIO = fmap (hv2repa . H.null1) . repa2hmPIO
 
-{-
-TODO: implement these
-
-null1sym :: Array F DIM2 Double -> Array F DIM1 Double
+null1sym :: H.Herm Double -> Array F DIM1 Double
 -- ^Solution of an overconstrained homogenous symmetric linear system.
-null1sym = hv2repa . H.null1sym . repa2hm
-
-null1symS :: Array D DIM2 Double -> Array F DIM1 Double
-null1symS = hv2repa . H.null1sym . repa2hmS
-
-null1symSIO :: Array D DIM2 Double -> IO (Array F DIM1 Double)
-null1symSIO = fmap (hv2repa . H.null1sym) . repa2hmSIO
-
-null1symP :: Monad m => Array D DIM2 Double -> m (Array F DIM1 Double)
-null1symP = fmap (hv2repa . H.null1sym) . repa2hmP
-
-null1symPIO :: Array D DIM2 Double -> IO (Array F DIM1 Double)
-null1symPIO = fmap (hv2repa . H.null1sym) . repa2hmPIO
--}
+null1sym = hv2repa . H.null1sym
 
 -- SVD
 
