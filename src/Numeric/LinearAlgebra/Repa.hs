@@ -224,19 +224,9 @@ module Numeric.LinearAlgebra.Repa
   , qrRawP
   , qrRawPIO
   , qrgr
-  {-
   -- * Cholesky
   , chol
-  , cholS
-  , cholSIO
-  , cholP
-  , cholPIO
-  , chol'
-  , chol'S
-  , chol'SIO
-  , chol'P
-  , chol'PIO
-  -}
+  , mbChol
   -- * Hessenberg
   , hess
   , hessS
@@ -1097,39 +1087,13 @@ qrgr k qr' = hm2repa $ H.qrgr k qr'
 
 -- Cholesky
 
-{-
-chol :: (Field t, Numeric t) => Array F DIM2 t -> Array F DIM2 t
+chol :: Field t => H.Herm t -> Array F DIM2 t
 -- ^Cholesky factorization of a positive definite hermitian or symmetric matrix. c = chol m ==> m == c' * c where c is upper triangular.
-chol = hm2repa . H.chol . repa2hm
+chol = hm2repa . H.chol 
 
-cholS :: (Field t, Numeric t) => Array D DIM2 t -> Array F DIM2 t
-cholS = hm2repa . H.chol . repa2hmS
-
-cholSIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t)
-cholSIO = fmap (hm2repa . H.chol) . repa2hmSIO
-
-cholP :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM2 t)
-cholP = fmap (hm2repa . H.chol) . repa2hmP
-
-cholPIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t)
-cholPIO = fmap (hm2repa . H.chol) . repa2hmPIO
-
-chol' :: (Field t, Numeric t) => Array F DIM2 t -> Array F DIM2 t
--- ^Similar to 'chol' without checking that the input matrix is hermitian or symmetric. It works with the upper triangular part.
-chol' = hm2repa . H.cholSH . repa2hm
-
-chol'S :: (Field t, Numeric t) => Array D DIM2 t -> Array F DIM2 t
-chol'S = hm2repa . H.cholSH . repa2hmS
-
-chol'SIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t)
-chol'SIO = fmap (hm2repa . H.cholSH) . repa2hmSIO
-
-chol'P :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM2 t)
-chol'P = fmap (hm2repa . H.cholSH) . repa2hmP
-
-chol'PIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM2 t)
-chol'PIO = fmap (hm2repa . H.cholSH) . repa2hmPIO
--}
+mbChol :: Field t => H.Herm t -> Maybe (Array F DIM2 t)
+-- ^Similar to chol, but instead of an error (e.g., caused by a matrix not positive definite) it returns Nothing.
+mbChol h = hm2repa <$> H.mbChol h
 
 -- Hessenberg
 
