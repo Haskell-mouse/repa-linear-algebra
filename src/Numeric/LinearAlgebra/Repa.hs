@@ -355,6 +355,7 @@ module Numeric.LinearAlgebra.Repa
   , trustSymSIO
   , trustSymP
   , trustSymPIO
+  , unSym
   ) where
 
 import Numeric.LinearAlgebra.Repa.Conversion
@@ -1566,3 +1567,7 @@ trustSymP m = H.trustSym <$> repa2hmP m
 
 trustSymPIO :: Field t => Array D DIM2 t -> IO (H.Herm t)
 trustSymPIO m = H.trustSym <$> repa2hmPIO m 
+
+unSym :: Numeric t => H.Herm t -> Array F DIM2 t
+-- ^Extract the general matrix from a Herm structure, forgetting its symmetric or Hermitian property.
+unSym = hm2repa . H.unSym
