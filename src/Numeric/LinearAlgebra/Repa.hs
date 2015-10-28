@@ -345,6 +345,16 @@ module Numeric.LinearAlgebra.Repa
   , symSIO
   , symP
   , symPIO
+  , mTm
+  , mTmS
+  , mTmSIO
+  , mTmP
+  , mTmPIO
+  , trustSym
+  , trustSymS
+  , trustSymSIO
+  , trustSymP
+  , trustSymPIO
   ) where
 
 import Numeric.LinearAlgebra.Repa.Conversion
@@ -1525,3 +1535,34 @@ symP m = H.sym <$> repa2hmP m
 symPIO :: Field t => Array D DIM2 t -> IO (H.Herm t)
 symPIO m = H.sym <$> repa2hmPIO m
 
+mTm :: Field t => Array F DIM2 t -> H.Herm t
+-- ^Compute the contraction tr x <> x of a general matrix.
+mTm = H.mTm . repa2hm
+
+mTmS :: Field t => Array D DIM2 t -> H.Herm t
+mTmS = H.mTm . repa2hmS
+
+mTmSIO :: Field t => Array D DIM2 t -> IO (H.Herm t)
+mTmSIO m = H.mTm <$> repa2hmSIO m
+
+mTmP :: (Field t, Monad m) => Array D DIM2 t -> m (H.Herm t)
+mTmP m = H.mTm <$> repa2hmP m
+
+mTmPIO :: Field t => Array D DIM2 t -> IO (H.Herm t)
+mTmPIO m = H.mTm <$> repa2hmPIO m
+
+trustSym :: Field t => Array F DIM2 t -> H.Herm t
+-- ^At your own risk, declare that a matrix is complex Hermitian or real symmetric for usage in 'chol', 'eigSH', etc. Only a triangular part of the matrix will be used.
+trustSym = H.trustSym . repa2hm
+
+trustSymS :: Field t => Array D DIM2 t -> H.Herm t
+trustSymS = H.trustSym . repa2hmS
+
+trustSymSIO :: Field t => Array D DIM2 t -> IO (H.Herm t)
+trustSymSIO m = H.trustSym <$> repa2hmSIO m 
+
+trustSymP :: (Field t, Monad m) => Array D DIM2 t -> m (H.Herm t)
+trustSymP m = H.trustSym <$> repa2hmP m 
+
+trustSymPIO :: Field t => Array D DIM2 t -> IO (H.Herm t)
+trustSymPIO m = H.trustSym <$> repa2hmPIO m 
