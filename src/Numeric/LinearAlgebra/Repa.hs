@@ -432,6 +432,7 @@ outerSIO v u = hm2repa <$> (H.outer <$> repa2hvSIO v <*> repa2hvSIO u)
 outerP :: (Product t, Numeric t, Monad m) => Array D DIM1 t -> Array D DIM1 t -> m (Array F DIM2 t)
 -- |Outer product of two vectors. Arguments computed in parallel.
 outerP v u = hm2repa <$> (H.outer <$> repa2hvP v <*> repa2hvP u)
+
 outerPIO :: (Product t, Numeric t) => Array D DIM1 t -> Array D DIM1 t -> IO (Array F DIM2 t)
 -- |Outer product of two vectors. Arguments computed in parallel inside the IO monad.
 outerPIO v u = hm2repa <$> (H.outer <$> repa2hvPIO v <*> repa2hvPIO u)
@@ -1338,7 +1339,7 @@ ldlSolvePIO :: Field t => H.LDL t -> Array D DIM2 t -> IO (Array F DIM2 t)
 ldlSolvePIO l m = hm2repa . H.ldlSolve l <$> repa2hmPIO m
 
 ldlPacked :: Field t => H.Herm t -> H.LDL t
--- ^Obtains the LDL decomposition of a matrix in a compact data structure suitable for ldlSolve.
+-- ^Obtains the LDL decomposition of a matrix in a compact data structure suitable for 'ldlSolve'.
 ldlPacked = H.ldlPacked
 
 -- Matrix functions
