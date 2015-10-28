@@ -10,6 +10,9 @@ module Numeric.LinearAlgebra.Repa
   , Seed
   , HShape(..)
   , LSDiv
+  , H.Herm
+  , H.LU
+  , H.LDL
   -- * Dot product
   , dot
   , dotS
@@ -196,40 +199,14 @@ module Numeric.LinearAlgebra.Repa
   , eigSIO
   , eigP
   , eigPIO
-  {-
   , eigSH
-  , eigSH_S
-  , eigSH_SIO
-  , eigSH_P
-  , eigSH_PIO
-  , eigSH'
-  , eigSH'S
-  , eigSH'SIO
-  , eigSH'P
-  , eigSH'PIO
-  -}
   , eigenvalues
   , eigenvaluesS
   , eigenvaluesSIO
   , eigenvaluesP
   , eigenvaluesPIO
-  {-
   , eigenvaluesSH
-  , eigenvaluesSH_S
-  , eigenvaluesSH_SIO
-  , eigenvaluesSH_P
-  , eigenvaluesSH_PIO
-  , eigenvaluesSH'
-  , eigenvaluesSH'S
-  , eigenvaluesSH'SIO
-  , eigenvaluesSH'P
-  , eigenvaluesSH'PIO
-  , geigSH'
-  , geigSH'S
-  , geigSH'SIO
-  , geigSH'P
-  , geigSH'PIO
-  -}
+  , geigSH
   -- * QR
   , qr
   , qrS
@@ -1025,51 +1002,9 @@ eigPIO m = do
   (s,v) <- H.eig <$> repa2hmPIO m
   return (hv2repa s, hm2repa v)
 
-{-
-eigSH :: (Field t, Numeric t) => Array F DIM2 t -> (Array F DIM1 Double, Array F DIM2 t)
+eigSH :: (Field t, Numeric t) => H.Herm t -> (Array F DIM1 Double, Array F DIM2 t)
 -- ^Eigenvalues and eigenvectors (as columns) of a complex hermitian or a real symmetric matrix, in descending order.
-eigSH m = let (s,v) = H.eigSH $ repa2hm m in (hv2repa s, hm2repa v)
-
-eigSH_S :: (Field t, Numeric t) => Array D DIM2 t -> (Array F DIM1 Double, Array F DIM2 t)
-eigSH_S m = let (s,v) = H.eigSH $ repa2hmS m in (hv2repa s, hm2repa v)
-
-eigSH_SIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM1 Double, Array F DIM2 t)
-eigSH_SIO m = do
-  (s,v) <- H.eigSH <$> repa2hmSIO m
-  return (hv2repa s, hm2repa v)
-
-eigSH_P :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM1 Double, Array F DIM2 t)
-eigSH_P m = do
-  (s,v) <- H.eigSH <$> repa2hmP m
-  return (hv2repa s, hm2repa v)
-
-eigSH_PIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM1 Double, Array F DIM2 t)
-eigSH_PIO m = do
-  (s,v) <- H.eigSH <$> repa2hmPIO m
-  return (hv2repa s, hm2repa v)
-
-eigSH' :: (Field t, Numeric t) => Array F DIM2 t -> (Array F DIM1 Double, Array F DIM2 t)
--- ^Similar to 'eigSH' without checking that the input matrix is hermitian or symmetric. It works with the upper triangular part.
-eigSH' m = let (s,v) = H.eigSH' $ repa2hm m in (hv2repa s, hm2repa v)
-
-eigSH'S :: (Field t, Numeric t) => Array D DIM2 t -> (Array F DIM1 Double, Array F DIM2 t)
-eigSH'S m = let (s,v) = H.eigSH' $ repa2hmS m in (hv2repa s, hm2repa v)
-
-eigSH'SIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM1 Double, Array F DIM2 t)
-eigSH'SIO m = do
-  (s,v) <- H.eigSH' <$> repa2hmSIO m
-  return (hv2repa s, hm2repa v)
-
-eigSH'P :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM1 Double, Array F DIM2 t)
-eigSH'P m = do
-  (s,v) <- H.eigSH' <$> repa2hmP m
-  return (hv2repa s, hm2repa v)
-
-eigSH'PIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM1 Double, Array F DIM2 t)
-eigSH'PIO m = do
-  (s,v) <- H.eigSH' <$> repa2hmPIO m
-  return (hv2repa s, hm2repa v)
-  -}
+eigSH h = let (s,v) = H.eigSH h in (hv2repa s, hm2repa v)
 
 eigenvalues :: (Field t, Numeric t) => Array F DIM2 t -> Array F DIM1 (Complex Double)
 -- ^Eigenvalues (not ordered) of a general square matrix.
@@ -1087,61 +1022,13 @@ eigenvaluesP = fmap (hv2repa . H.eigenvalues) . repa2hmP
 eigenvaluesPIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM1 (Complex Double))
 eigenvaluesPIO = fmap (hv2repa . H.eigenvalues) . repa2hmPIO
 
-{-
-eigenvaluesSH :: (Field t, Numeric t) => Array F DIM2 t -> Array F DIM1 Double
+eigenvaluesSH :: (Field t, Numeric t) => H.Herm t -> Array F DIM1 Double
 -- ^Eigenvalues (in descending order) of a complex hermitian or real symmetric matrix.
-eigenvaluesSH = hv2repa . H.eigenvaluesSH . repa2hm
+eigenvaluesSH = hv2repa . H.eigenvaluesSH 
 
-eigenvaluesSH_S :: (Field t, Numeric t) => Array D DIM2 t -> Array F DIM1 Double
-eigenvaluesSH_S = hv2repa . H.eigenvaluesSH . repa2hmS
-
-eigenvaluesSH_SIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM1 Double)
-eigenvaluesSH_SIO = fmap (hv2repa . H.eigenvaluesSH) . repa2hmSIO
-
-eigenvaluesSH_P :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM1 Double)
-eigenvaluesSH_P = fmap (hv2repa . H.eigenvaluesSH) . repa2hmP
-
-eigenvaluesSH_PIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM1 Double)
-eigenvaluesSH_PIO = fmap (hv2repa . H.eigenvaluesSH) . repa2hmPIO
-
-eigenvaluesSH' :: (Field t, Numeric t) => Array F DIM2 t -> Array F DIM1 Double
--- ^Similar to 'eigenvaluesSH' without checking that the input matrix is hermitian or symmetric. It works with the upper triangular part.
-eigenvaluesSH' = hv2repa . H.eigenvaluesSH' . repa2hm
-
-eigenvaluesSH'S :: (Field t, Numeric t) => Array D DIM2 t -> Array F DIM1 Double
-eigenvaluesSH'S = hv2repa . H.eigenvaluesSH' . repa2hmS
-
-eigenvaluesSH'SIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM1 Double)
-eigenvaluesSH'SIO = fmap (hv2repa . H.eigenvaluesSH') . repa2hmSIO
-
-eigenvaluesSH'P :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> m (Array F DIM1 Double)
-eigenvaluesSH'P = fmap (hv2repa . H.eigenvaluesSH') . repa2hmP
-
-eigenvaluesSH'PIO :: (Field t, Numeric t) => Array D DIM2 t -> IO (Array F DIM1 Double)
-eigenvaluesSH'PIO = fmap (hv2repa . H.eigenvaluesSH') . repa2hmPIO
-
-geigSH' :: (Field t, Numeric t) => Array F DIM2 t -> Array F DIM2 t -> (Array F DIM1 Double, Array F DIM2 t)
--- ^Generalized symmetric positive definite eigensystem Av = IBv, for A and B symmetric, B positive definite (conditions not checked).
-geigSH' a b = let (s,v) = H.geigSH' (repa2hm a) (repa2hm b) in (hv2repa s, hm2repa v)
-
-geigSH'S :: (Field t, Numeric t) => Array D DIM2 t -> Array D DIM2 t -> (Array F DIM1 Double, Array F DIM2 t)
-geigSH'S a b = let (s,v) = H.geigSH' (repa2hmS a) (repa2hmS b) in (hv2repa s, hm2repa v)
-
-geigSH'SIO :: (Field t, Numeric t) => Array D DIM2 t -> Array D DIM2 t -> IO (Array F DIM1 Double, Array F DIM2 t)
-geigSH'SIO a b = do
-  (s,v) <- H.geigSH' <$> repa2hmSIO a <*> repa2hmSIO b
-  return (hv2repa s, hm2repa v)
-
-geigSH'P :: (Field t, Numeric t, Monad m) => Array D DIM2 t -> Array D DIM2 t -> m (Array F DIM1 Double, Array F DIM2 t)
-geigSH'P a b = do
-  (s,v) <- H.geigSH' <$> repa2hmP a <*> repa2hmP b
-  return (hv2repa s, hm2repa v)
-
-geigSH'PIO :: (Field t, Numeric t) => Array D DIM2 t -> Array D DIM2 t -> IO (Array F DIM1 Double, Array F DIM2 t)
-geigSH'PIO a b = do
-  (s,v) <- H.geigSH' <$> repa2hmPIO a <*> repa2hmPIO b
-  return (hv2repa s, hm2repa v)
--}
+geigSH :: (Field t, Numeric t) => H.Herm t -> H.Herm t -> (Array F DIM1 Double, Array F DIM2 t)
+-- ^Generalized symmetric positive definite eigensystem Av = IBv, for A and B symmetric, B positive definite.
+geigSH a b = let (s,v) = H.geigSH a b in (hv2repa s, hm2repa v)
 
 -- QR
 
