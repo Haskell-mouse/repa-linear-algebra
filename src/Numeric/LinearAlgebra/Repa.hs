@@ -340,6 +340,11 @@ module Numeric.LinearAlgebra.Repa
   -- *Misc
   , meanCov
   , rowOuters
+  , sym
+  , symS
+  , symSIO
+  , symP
+  , symPIO
   ) where
 
 import Numeric.LinearAlgebra.Repa.Conversion
@@ -1503,3 +1508,20 @@ meanCov m = let (v,c) = H.meanCov $ repa2hm m in (hv2repa v, hm2repa c)
 rowOuters :: Array F DIM2 Double -> Array F DIM2 Double -> Array F DIM2 Double
 -- ^Outer product of the rows of the matrices.
 rowOuters m n = hm2repa $ H.rowOuters (repa2hm m) (repa2hm n)
+
+sym :: Field t => Array F DIM2 t -> H.Herm t
+-- ^Compute the complex Hermitian or real symmetric part of a square matrix ((x + tr x)/2).
+sym = H.sym . repa2hm
+
+symS :: Field t => Array D DIM2 t -> H.Herm t
+symS = H.sym . repa2hmS
+
+symSIO :: Field t => Array D DIM2 t -> IO (H.Herm t)
+symSIO m = H.sym <$> repa2hmSIO m
+
+symP :: (Field t, Monad m) => Array D DIM2 t -> m (H.Herm t)
+symP m = H.sym <$> repa2hmP m
+
+symPIO :: Field t => Array D DIM2 t -> IO (H.Herm t)
+symPIO m = H.sym <$> repa2hmPIO m
+
