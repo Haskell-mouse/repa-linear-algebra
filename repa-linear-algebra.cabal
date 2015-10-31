@@ -26,7 +26,7 @@ library
   exposed-modules:     Numeric.LinearAlgebra.Repa
                        Numeric.LinearAlgebra.Repa.Conversion
   build-depends:       base    >= 4.8  && <4.9
-                     , hmatrix >= 0.17 && < 0.18
+                     , hmatrix >= 0.17 && < 0.19
                      , repa    >= 3.4  && < 3.5
                      , vector  >= 0.10 && < 0.12
   hs-source-dirs:      src
