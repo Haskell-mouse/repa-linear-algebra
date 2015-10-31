@@ -2,10 +2,11 @@ resolver: lts-3.11
 packages:
 - '.'
 - location:
-   git:    https://github.com/albertoruiz/hmatrix.git 
-   commit: ebf8ce6595c6d11bcc3662e84a32822c2eaaa77a
+   git:    https://github.com/obadz/hmatrix.git 
+   commit: db5fe25c28e6a67eed9fbc65412110480086641b
   subdirs:
   - "packages/base"
 extra-deps: []
-flags: {}
-
+flags:
+  hmatrix:
+    openblas: true
