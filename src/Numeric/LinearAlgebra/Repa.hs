@@ -1356,9 +1356,9 @@ randomMatrix d a b = fmap hm2repa
        Uniform    -> H.rand a b
        Gaussian -> H.randn a b
 
-gaussianSample :: Seed -> Int -> Array F DIM1 Double -> Array F DIM2 Double -> Array F DIM2 Double
+gaussianSample :: Seed -> Int -> Array F DIM1 Double -> H.Herm Double -> Array F DIM2 Double
 -- ^A matrix whose rows are pseudorandom samples from a multivariate Gaussian distribution.
-gaussianSample s r mean cov = hm2repa $ H.gaussianSample s r (repa2hv mean) (repa2hm cov)
+gaussianSample s r mean = hm2repa . H.gaussianSample s r (repa2hv mean) 
 
 uniformSample :: Seed -> Int -> [(Double,Double)] -> Array F DIM2 Double
 -- ^A matrix whose rows are pseudorandom samples from a multivariate uniform distribution.
@@ -1366,9 +1366,9 @@ uniformSample s r rng = hm2repa $ H.uniformSample s r rng
 
 -- misc
 
-meanCov :: Array F DIM2 Double -> (Array F DIM1 Double, Array F DIM2 Double)
+meanCov :: Array F DIM2 Double -> (Array F DIM1 Double, H.Herm Double) 
 -- ^Compute mean vector and a covariance matrix of the rows of a matrix.
-meanCov m = let (v,c) = H.meanCov $ repa2hm m in (hv2repa v, hm2repa c)
+meanCov m = let (v,c) = H.meanCov $ repa2hm m in (hv2repa v, c)
 
 rowOuters :: Array F DIM2 Double -> Array F DIM2 Double -> Array F DIM2 Double
 -- ^Outer product of the rows of the matrices.

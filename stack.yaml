@@ -2,8 +2,8 @@ resolver: lts-3.11
 packages:
 - '.'
 - location:
-   git:    https://github.com/obadz/hmatrix.git 
-   commit: db5fe25c28e6a67eed9fbc65412110480086641b
+   git:    https://github.com/marcinmrotek/hmatrix.git 
+   commit: 283fc116b73a3199edeaf13e1cc7b59b150a964d
   subdirs:
   - "packages/base"
 extra-deps: []
