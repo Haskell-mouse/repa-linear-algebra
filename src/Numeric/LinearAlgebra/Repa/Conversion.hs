@@ -131,8 +131,7 @@ repa2hm :: Storable t => Array F DIM2 t -> H.Matrix t
 -- ^O(1). Convert a Repa Array to a HMatrix Matrix.
 repa2hm r = H.reshape c $ V.unsafeFromForeignPtr0 (toForeignPtr r) ln
   where ln = size e
-        (_:c:[]) = listOfShape e
-        e = extent r
+        e@(_:.c) = extent r
 
 repa2hmS :: Storable t => Array D DIM2 t -> H.Matrix t
 -- ^Convert a delayed Repa Array to a HMatrix Matrix, evaluating it sequentially.
@@ -145,8 +144,7 @@ repa2hmSIO r = do
     computeIntoS ptr r
     return . H.reshape c  $ V.unsafeFromForeignPtr0 ptr ln
   where ln = size e
-        (_:c:[]) = listOfShape e
-        e = extent r
+        e@(_:.c) = extent r
 
 repa2hmP :: (Storable t, Monad m) => Array D DIM2 t -> m (H.Matrix t)
 -- ^Convert a delayed Repa Array to a HMatrix Matrix, evaluating it in parallel.
@@ -159,5 +157,4 @@ repa2hmPIO r = do
     computeIntoP ptr r
     return . H.reshape c  $ V.unsafeFromForeignPtr0 ptr ln
   where ln = size e
-        (_:c:[]) = listOfShape e
-        e = extent r
+        e@(_:.c) = extent r
