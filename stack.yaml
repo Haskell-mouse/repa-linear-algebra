@@ -7,6 +7,3 @@ packages:
   subdirs:
   - "packages/base"
 extra-deps: []
-flags:
-  hmatrix:
-    openblas: true
