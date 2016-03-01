@@ -1,5 +1,5 @@
 name:                repa-linear-algebra
-version:             0.3.0.0
+version:             0.3.0.1
 synopsis:            HMatrix operations for Repa.
 description:      HMatrix Vector and Matrix conversions to and from REPA Array F DIM1/2 (Complex) Double, together with a port of linear algebraic functions.
 license:             BSD3
