@@ -1,9 +1,9 @@
-resolver: lts-5.4
+resolver: lts-12.3
 packages:
 - '.'
 - location:
    git:    https://github.com/albertoruiz/hmatrix.git 
-   commit: c84049d82c9354bda7843c0b83f50c56f75b92e2
+   commit: c4b80ef9951b533d6bbbb34df8109f3290546296
   subdirs:
   - "packages/base"
 extra-deps: []

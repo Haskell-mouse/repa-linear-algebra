@@ -30,7 +30,7 @@ module Numeric.LinearAlgebra.Repa
   , H.Matrix
   , RandDist(..)
   , Seed
-  -- * Special types 
+  -- * Special types
   , H.Herm
   , H.LU
   , H.LDL
@@ -322,6 +322,7 @@ module Numeric.LinearAlgebra.Repa
   , uniformSample
   -- *Misc
   , meanCov
+  , meanCovP
   , rowOuters
   , sym
   , symS
@@ -345,8 +346,11 @@ import Numeric.LinearAlgebra.Repa.Conversion
 
 import Data.Array.Repa hiding (rank)
 import Data.Array.Repa.Repr.ForeignPtr
+import Data.Bifunctor (first)
+import Numeric.LinearAlgebra.HMatrix
+  (Complex, Field, LSDiv, Normed, Numeric, Product, RandDist(..), RealElement,
+  Seed, Vector)
 import qualified Numeric.LinearAlgebra.HMatrix as H
-import Numeric.LinearAlgebra.HMatrix (Complex, Numeric, Field, LSDiv, Normed, Product, Vector, RealElement, RandDist(..), Seed)
 
 -- Dot product
 
@@ -1014,7 +1018,7 @@ eigenvaluesPIO = fmap (hv2repa . H.eigenvalues) . repa2hmPIO
 
 eigenvaluesSH :: (Field t, Numeric t) => H.Herm t -> Array F DIM1 Double
 -- ^Eigenvalues (in descending order) of a complex hermitian or real symmetric matrix.
-eigenvaluesSH = hv2repa . H.eigenvaluesSH 
+eigenvaluesSH = hv2repa . H.eigenvaluesSH
 
 geigSH :: (Field t, Numeric t) => H.Herm t -> H.Herm t -> (Array F DIM1 Double, Array F DIM2 t)
 -- ^Generalized symmetric positive definite eigensystem Av = IBv, for A and B symmetric, B positive definite.
@@ -1089,7 +1093,7 @@ qrgr k qr' = hm2repa $ H.qrgr k qr'
 
 chol :: Field t => H.Herm t -> Array F DIM2 t
 -- ^Cholesky factorization of a positive definite hermitian or symmetric matrix. c = chol m ==> m == c' * c where c is upper triangular.
-chol = hm2repa . H.chol 
+chol = hm2repa . H.chol
 
 mbChol :: Field t => H.Herm t -> Maybe (Array F DIM2 t)
 -- ^Similar to chol, but instead of an error (e.g., caused by a matrix not positive definite) it returns Nothing.
@@ -1168,7 +1172,7 @@ luPIO m = do
 
 luPacked :: (Field t, Numeric t) => Array F DIM2 t -> H.LU t
 -- ^Obtains the LU decomposition in a packed data structure suitable for 'luSolve'.
-luPacked m =  H.luPacked $ repa2hm m 
+luPacked m =  H.luPacked $ repa2hm m
 
 luPackedS :: (Field t, Numeric t) => Array D DIM2 t -> H.LU t
 luPackedS m = H.luPacked $ repa2hmS m
@@ -1358,7 +1362,7 @@ randomMatrix d a b = fmap hm2repa
 
 gaussianSample :: Seed -> Int -> Array F DIM1 Double -> H.Herm Double -> Array F DIM2 Double
 -- ^A matrix whose rows are pseudorandom samples from a multivariate Gaussian distribution.
-gaussianSample s r mean = hm2repa . H.gaussianSample s r (repa2hv mean) 
+gaussianSample s r mean = hm2repa . H.gaussianSample s r (repa2hv mean)
 
 uniformSample :: Seed -> Int -> [(Double,Double)] -> Array F DIM2 Double
 -- ^A matrix whose rows are pseudorandom samples from a multivariate uniform distribution.
@@ -1366,9 +1370,12 @@ uniformSample s r rng = hm2repa $ H.uniformSample s r rng
 
 -- misc
 
-meanCov :: Array F DIM2 Double -> (Array F DIM1 Double, H.Herm Double) 
+meanCov :: Array F DIM2 Double -> (Array F DIM1 Double, H.Herm Double)
 -- ^Compute mean vector and a covariance matrix of the rows of a matrix.
 meanCov m = let (v,c) = H.meanCov $ repa2hm m in (hv2repa v, c)
+
+meanCovP :: Monad m => Array D DIM2 Double -> m (Array F DIM1 Double, H.Herm Double)
+meanCovP m = first hv2repa <$> H.meanCov <$> repa2hmP m
 
 rowOuters :: Array F DIM2 Double -> Array F DIM2 Double -> Array F DIM2 Double
 -- ^Outer product of the rows of the matrices.
@@ -1414,13 +1421,13 @@ trustSymS :: Field t => Array D DIM2 t -> H.Herm t
 trustSymS = H.trustSym . repa2hmS
 
 trustSymSIO :: Field t => Array D DIM2 t -> IO (H.Herm t)
-trustSymSIO m = H.trustSym <$> repa2hmSIO m 
+trustSymSIO m = H.trustSym <$> repa2hmSIO m
 
 trustSymP :: (Field t, Monad m) => Array D DIM2 t -> m (H.Herm t)
-trustSymP m = H.trustSym <$> repa2hmP m 
+trustSymP m = H.trustSym <$> repa2hmP m
 
 trustSymPIO :: Field t => Array D DIM2 t -> IO (H.Herm t)
-trustSymPIO m = H.trustSym <$> repa2hmPIO m 
+trustSymPIO m = H.trustSym <$> repa2hmPIO m
 
 unSym :: Numeric t => H.Herm t -> Array F DIM2 t
 -- ^Extract the general matrix from a Herm structure, forgetting its symmetric or Hermitian property.
