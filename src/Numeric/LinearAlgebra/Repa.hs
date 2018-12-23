@@ -241,6 +241,7 @@ module Numeric.LinearAlgebra.Repa
   , qrgr
   -- * Cholesky
   , chol
+  , cholD
   , mbChol
   -- * Hessenberg
   , hess
@@ -1094,6 +1095,9 @@ qrgr k qr' = hm2repa $ H.qrgr k qr'
 chol :: Field t => H.Herm t -> Array F DIM2 t
 -- ^Cholesky factorization of a positive definite hermitian or symmetric matrix. c = chol m ==> m == c' * c where c is upper triangular.
 chol = hm2repa . H.chol
+
+cholD :: Field t => H.Herm t -> Array D DIM2 t
+cholD = smap id . chol
 
 mbChol :: Field t => H.Herm t -> Maybe (Array F DIM2 t)
 -- ^Similar to chol, but instead of an error (e.g., caused by a matrix not positive definite) it returns Nothing.
