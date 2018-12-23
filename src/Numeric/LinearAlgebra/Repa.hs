@@ -324,6 +324,7 @@ module Numeric.LinearAlgebra.Repa
   -- *Misc
   , meanCov
   , meanCovP
+  , meanCovS
   , rowOuters
   , sym
   , symS
@@ -1380,6 +1381,9 @@ meanCov m = let (v,c) = H.meanCov $ repa2hm m in (hv2repa v, c)
 
 meanCovP :: Monad m => Array D DIM2 Double -> m (Array F DIM1 Double, H.Herm Double)
 meanCovP m = first hv2repa <$> H.meanCov <$> repa2hmP m
+
+meanCovS :: Array D DIM2 Double -> (Array F DIM1 Double, H.Herm Double)
+meanCovS m = first hv2repa $ H.meanCov $ repa2hmS m
 
 rowOuters :: Array F DIM2 Double -> Array F DIM2 Double -> Array F DIM2 Double
 -- ^Outer product of the rows of the matrices.
