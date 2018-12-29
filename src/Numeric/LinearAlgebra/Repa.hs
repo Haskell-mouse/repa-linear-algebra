@@ -34,6 +34,14 @@ module Numeric.LinearAlgebra.Repa
   , H.Herm
   , H.LU
   , H.LDL
+  -- identity matrix
+  , ident
+  , identD
+  -- matrix diagonal
+  , diag
+  , diagD
+  , takeDiag
+  , takeDiagD
   -- * Dot product
   , dot
   , dotS
@@ -353,6 +361,32 @@ import Numeric.LinearAlgebra.HMatrix
   (Complex, Field, LSDiv, Normed, Numeric, Product, RandDist(..), RealElement,
   Seed, Vector)
 import qualified Numeric.LinearAlgebra.HMatrix as H
+
+import Foreign.Storable (Storable)
+import qualified Data.Vector.Storable as V
+
+--- identity matrix
+
+ident :: (Container V.Vector t, Num t, Element t) => Int -> Array F DIM2 t
+ident = hm2repa . H.ident
+
+identD :: (Container V.Vector t, Num t, Element t) => Int -> Array D DIM2 t
+identD = smap id . ident
+
+-- Diagonal functions
+diag :: (Container V.Vector t, Num t, Element t) => Array D DIM1 t -> Array F DIM2 t
+diag = hm2repa . H.diag . repa2hvS
+
+diagD :: (Container V.Vector t, Num t, Element t) => Array D DIM1 t -> Array D DIM2 t
+diagD = smap id . diag
+
+takeDiag :: (Element t, Storable t) => Array D DIM2 t -> Array F DIM1 t
+takeDiag = hv2repa . H.takeDiag . repa2hmS
+
+takeDiagD :: (Element t, Storable t) => Array D DIM2 t -> Array D DIM1 t
+takeDiagD = smap id . takeDiag
+
+
 
 -- Dot product
 
