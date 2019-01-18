@@ -251,6 +251,7 @@ module Numeric.LinearAlgebra.Repa
   , chol
   , cholD
   , mbChol
+  , cholSH
   -- * Hessenberg
   , hess
   , hessS
@@ -1137,6 +1138,9 @@ cholD = smap id . chol
 mbChol :: Field t => H.Herm t -> Maybe (Array F DIM2 t)
 -- ^Similar to chol, but instead of an error (e.g., caused by a matrix not positive definite) it returns Nothing.
 mbChol h = hm2repa <$> H.mbChol h
+
+cholSH :: Field t => Array D DIM2 t -> Array D DIM2 t
+cholSH = delay . hm2repa . H.cholSH . repa2hmS
 
 -- Hessenberg
 
