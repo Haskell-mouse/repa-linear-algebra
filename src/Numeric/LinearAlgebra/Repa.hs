@@ -34,6 +34,14 @@ module Numeric.LinearAlgebra.Repa
   , H.Herm
   , H.LU
   , H.LDL
+  -- identity matrix
+  , ident
+  , identD
+  -- matrix diagonal
+  , diag
+  , diagD
+  , takeDiag
+  , takeDiagD
   -- * Dot product
   , dot
   , dotS
@@ -241,7 +249,9 @@ module Numeric.LinearAlgebra.Repa
   , qrgr
   -- * Cholesky
   , chol
+  , cholD
   , mbChol
+  , cholSH
   -- * Hessenberg
   , hess
   , hessS
@@ -351,6 +361,32 @@ import Numeric.LinearAlgebra.HMatrix
   (Complex, Field, LSDiv, Normed, Numeric, Product, RandDist(..), RealElement,
   Seed, Vector)
 import qualified Numeric.LinearAlgebra.HMatrix as H
+
+import qualified Data.Vector.Storable as V
+import Foreign.Storable (Storable)
+
+--- identity matrix
+
+ident :: (Container V.Vector t, Num t, Element t) => Int -> Array F DIM2 t
+ident = hm2repa . H.ident
+
+identD :: (Container V.Vector t, Num t, Element t) => Int -> Array D DIM2 t
+identD = smap id . ident
+
+-- Diagonal functions
+diag :: (Container V.Vector t, Num t, Element t) => Array D DIM1 t -> Array F DIM2 t
+diag = hm2repa . H.diag . repa2hvS
+
+diagD :: (Container V.Vector t, Num t, Element t) => Array D DIM1 t -> Array D DIM2 t
+diagD = smap id . diag
+
+takeDiag :: (Element t, Storable t) => Array D DIM2 t -> Array F DIM1 t
+takeDiag = hv2repa . H.takeDiag . repa2hmS
+
+takeDiagD :: (Element t, Storable t) => Array D DIM2 t -> Array D DIM1 t
+takeDiagD = smap id . takeDiag
+
+
 
 -- Dot product
 
@@ -1095,9 +1131,15 @@ chol :: Field t => H.Herm t -> Array F DIM2 t
 -- ^Cholesky factorization of a positive definite hermitian or symmetric matrix. c = chol m ==> m == c' * c where c is upper triangular.
 chol = hm2repa . H.chol
 
+cholD :: Field t => H.Herm t -> Array D DIM2 t
+cholD = smap id . chol
+
 mbChol :: Field t => H.Herm t -> Maybe (Array F DIM2 t)
 -- ^Similar to chol, but instead of an error (e.g., caused by a matrix not positive definite) it returns Nothing.
 mbChol h = hm2repa <$> H.mbChol h
+
+cholSH :: Field t => Array D DIM2 t -> Array D DIM2 t
+cholSH = delay . hm2repa . H.cholSH . repa2hmS
 
 -- Hessenberg
 
