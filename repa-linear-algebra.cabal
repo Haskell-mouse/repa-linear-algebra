@@ -28,7 +28,7 @@ library
                        Numeric.LinearAlgebra.Repa.Experimental
   build-depends:       base    >= 4.8  && < 5
                      , bifunctors
-                     , hmatrix >= 0.18 && <= 0.20
+                     , hmatrix >= 0.18 && < 0.21
                      , repa    >= 3.4  && < 3.5
                      , vector  >= 0.10 && < 0.13
   default-extensions:  RankNTypes
